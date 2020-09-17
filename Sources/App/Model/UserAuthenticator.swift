@@ -1,26 +1,45 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Mathis Fechner on 05.09.20.
 //
 
 import Vapor
+import Fluent
 
-struct UserBasicAuthenticator: BasicAuthenticator {
-    func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Void> {
-        if basic.username == "Test" && basic.password == "secret" {
-            request.auth.login(App.User(name: "Vapor"))
+
+
+struct UserCredentialsAuthenticator: CredentialsAuthenticator {
+    struct DTO: Content {
+        var username: String
+        var password: String
+    }
+    
+    typealias Credentials = DTO
+    
+    func authenticate(credentials: DTO, for req: Request) -> EventLoopFuture<Void> {
+        User.query(on: req.db)
+            .filter(\.$name == credentials.username)
+            .first()
+            .map {
+                do {
+                    if let user = $0, try Bcrypt.verify(credentials.password, created: user.passwordHash) {
+                        req.session.data["id"] = user.id?.uuidString
+                        req.auth.login(user)
+                    }
+                } catch {}
         }
-        return request.eventLoop.makeSucceededFuture(())
     }
 }
 
-struct UserTokenAuthenticator: BearerAuthenticator {
-    func authenticate(bearer: BearerAuthorization, for request: Request) -> EventLoopFuture<Void> {
-        if bearer.token == "foo" {
-            request.auth.login(App.User(name: "Vapor"))
+struct UserRequestAuthenticator: RequestAuthenticator {
+    func authenticate(request: Request) -> EventLoopFuture<Void> {
+        User.find(UUID(uuidString: request.session.data["id"] ?? ""), on: request.db)
+        .map {
+            if let user = $0 {
+                request.auth.login(user)
+            }
         }
-        return request.eventLoop.makeSucceededFuture(())
     }
 }
