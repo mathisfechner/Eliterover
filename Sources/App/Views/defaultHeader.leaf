@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    <meta charset="utf-8">
+    <title>#(title)</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="#(description)">
+	<link rel="stylesheet" href="/style.css">
+	<link rel="icon" type="image/png" href="/EliteHerz.png" sizes="32x32">
+	<link rel="icon" type="image/png" href="/EliteHerzBig.png" sizes="96x96">
+	<link rel="apple-touch-icon" sizes="180x180" href="/EliteHerzApple.png">
+	<link rel="icon" type="image/svg+xml" href="/EliteHerz.svg" sizes="any">
+	<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="display: none">
+	<symbol id="EliteHerz" viewBox="0 0 3906 4163" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+		<g><path d="M1508.57,2538.85c-560.824,-332.328 -1124.7,-751.005 -1262.72,-1205.2c-122.396,-402.803 -47.201,-817.345 430.999,-967.799c700.145,-220.283 1278.32,887.524 1278.32,887.524c-0,-0 734.023,-1291.62 1399.83,-1022.52c507.912,205.279 384.458,788.528 171.216,1208.83c-171.318,337.67 -596.913,875.316 -786.716,1138.4" style="fill:\#fff;fill-opacity:0;stroke:\#ff0017;stroke-width:387.93px;"/><path d="M1508.57,2538.85c-560.824,-332.328 -1124.7,-751.005 -1262.72,-1205.2c-122.396,-402.803 -47.201,-817.345 430.999,-967.799c700.145,-220.283 1278.32,887.524 1278.32,887.524c-0,-0 734.023,-1291.62 1399.83,-1022.52c507.912,205.279 384.458,788.528 171.216,1208.83c-171.318,337.67 -596.913,875.316 -786.716,1138.4" style="fill:\#fff;fill-opacity:0;stroke:\#000017;stroke-width:387.93px;stroke-dasharray:387.93,775.86,0,0;"/><path d="M1655.6,3034.07c104.61,-34.659 217.54,21.71 252.026,125.801c34.487,104.091 -22.445,216.738 -127.055,251.397c-104.611,34.659 -217.54,-21.711 -252.027,-125.802c-34.487,-104.09 22.445,-216.737 127.056,-251.396Z"/><path d="M2111.31,3268.96c104.61,-34.658 217.54,21.711 252.026,125.802c34.487,104.091 -22.445,216.738 -127.055,251.397c-104.611,34.659 -217.54,-21.711 -252.027,-125.802c-34.487,-104.091 22.445,-216.738 127.056,-251.397Z" style="fill:\#f00;"/><path d="M2379.24,2814.68c104.61,-34.659 217.539,21.711 252.026,125.802c34.487,104.09 -22.445,216.737 -127.056,251.396c-104.61,34.659 -217.54,-21.71 -252.026,-125.801c-34.487,-104.091 22.445,-216.738 127.056,-251.397Z"/><path d="M1923.25,2589.62c104.611,-34.659 217.54,21.71 252.027,125.801c34.486,104.091 -22.445,216.738 -127.056,251.397c-104.611,34.659 -217.54,-21.711 -252.027,-125.802c-34.486,-104.09 22.446,-216.737 127.056,-251.396Z" style="fill:\#f00;"/><path d="M2617.15,3715.77l340.58,199.185" style="fill:none;stroke:\#000017;stroke-width:390.76px;"/><path d="M2667.01,2354.08l303.08,223.999" style="fill:none;stroke:\#b0ac9f;stroke-width:156.25px;"/><path d="M1312.1,3966.64l161.053,-272.694" style="fill:none;stroke:\#ff0017;stroke-width:390.76px;"/></g>
+	</symbol>
+</svg>
+  </head>
+  <body>
+	  #import("body")
+	  	<script src="js/script.js"></script>
+  </body>
+</html>

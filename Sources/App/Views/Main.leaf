@@ -1,0 +1,43 @@
+#extend("DefaultHeader"):
+    #export("body"):
+        <header>
+			<a href="/">
+				<svg  width="2rem" height="2rem">
+					<use href="\#EliteHerz"/>
+				</svg>
+			</a>
+            <nav>
+                <ul>
+					<li>
+						<a>Elite</a>
+					</li>
+                    <li>
+                        <a href="/">Über uns</a>
+                    </li>
+                    #if(user != nil):
+                    <li>
+                        <a href="/logout" id="logout">Logout</a>
+                    </li>
+                    #endif
+                </ul>
+            </nav>
+        </header>
+		<main>
+			<aside class="content">
+        	</aside>
+        	<div class="main">
+                #for(View in Content):
+                    #if(View.form != nil):
+                        #extend("SubViews/form")
+                    #elseif(View.simple != nil):
+                        #extend("SubViews/simple")
+                    #endif
+                #endfor
+        	</div>
+		</main>
+        <footer class="main little">
+			<a class="little">Datenschutzerklärung</a>
+			<a class="little">Impressum</a>
+        </footer>
+    #endexport
+#endextend

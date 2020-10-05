@@ -11,6 +11,11 @@ let package = Package(
         .package(url: "https://github.com/vapor/fluent.git", from: "4.0.0"),
         // with postgres Driver
         .package(url: "https://github.com/vapor/fluent-postgres-driver.git", from: "2.0.0"),
+        // Leaf
+        .package(url: "https://github.com/vapor/leaf.git", from: "4.0.0-rc"),
+        //HTML Kit
+        .package(url: "https://github.com/vapor-community/HTMLKit.git", from: "2.0.0"),
+        .package(name: "HTMLKitVaporProvider", url: "https://github.com/MatsMoll/htmlkit-vapor-provider.git", from: "1.0.0"),
         // 💧 A server-side Swift web framework.
         .package(url: "https://github.com/vapor/vapor.git", from: "4.0.0")
     ],
@@ -20,6 +25,9 @@ let package = Package(
             dependencies: [
                 .product(name: "Fluent", package: "fluent"),
                 .product(name: "FluentPostgresDriver", package: "fluent-postgres-driver"),
+                .product(name: "Leaf", package: "leaf"),
+                .product(name: "HTMLKit", package: "HTMLKit"),
+                .product(name: "HTMLKitVaporProvider", package: "HTMLKitVaporProvider"),
                 .product(name: "Vapor", package: "vapor")
             ],
             swiftSettings: [

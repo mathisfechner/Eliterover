@@ -10,7 +10,7 @@ import Fluent
 import FluentPostgresDriver
 
 
-final class User: Model, Authenticatable {
+final class User: Model, Authenticatable, Content {
     
     static let schema = "user"
     

@@ -19,7 +19,7 @@ struct UserCredentialsAuthenticator: CredentialsAuthenticator {
     typealias Credentials = DTO
     
     func authenticate(credentials: DTO, for req: Request) -> EventLoopFuture<Void> {
-        User.query(on: req.db)
+        return User.query(on: req.db)
             .filter(\.$name == credentials.username)
             .first()
             .map {
