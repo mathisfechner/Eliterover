@@ -1,0 +1,29 @@
+#Content(index)
+#for(view in Content):
+#if(index == Content()):
+<div class="content">
+    <h1>#(view.form.title)</h1>
+    #if(view.form.error != nil):
+        <p class="error">#(view.form.error)<p>
+    #endif
+    <form action="/#(view.form.action)" method="post" id="#(view.form.action)">
+        #for(field in view.form.input):
+        <div class="fieldRow">
+            #if(field.description != nil):
+            <label for="#(field.identifier)">#(field.description)</label>
+            #endif
+            <input form="#(view.form.action)" class="#(field.classID)" name="#(field.identifier)" placeholder="#(field.placeholder)" type="#(field.type)" />
+        </div>
+        #endfor
+        <button type="submit">#(view.form.action)</button>
+    </form>
+    #if(view.form.links != nil):
+        <div class="fieldRow">
+        #for(link in view.form.links):
+            <a href="#(link.href)" class="little">#(link.description)</a>
+        #endfor
+        </div>
+    #endif
+</div>
+#endif
+#endfor

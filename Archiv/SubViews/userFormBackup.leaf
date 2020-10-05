@@ -1,0 +1,22 @@
+<div class="content">
+    <h1>#(title)</h1>
+    #if(error != nil):
+        <p class="error">#(error)<p>
+    #endif
+    <form action="/#(action)" method="post" id="#(action)">
+    #Content(index)
+    #Content()
+        #for(field in input):
+        #if(index == Content()):
+        Tadaa
+        #endif
+        <div class="fieldRow">
+            #if(field.name != nil):
+            <label for="#(field.identifier)">#(field.name)</label>
+            #endif
+            <input form="#(action)" class="#(classID)" name="#(field.identifier)" placeholder="#(field.placeholder)" type="#(field.type)" />
+        </div>
+        #endfor
+        <button type="submit">#(action)</button>
+    </form>
+</div>

@@ -1,0 +1,30 @@
+#Content(index)
+#for(view in Content):
+#if(index == Content()):
+#if(view.simple.error):
+<div class="content error">
+#else:
+<div class="content" id="#(view.simple.id)">
+#endif
+    <h1>#(view.simple.title)</h1>
+    #for(paragraph in view.simple.text):
+    <p>#(paragraph)</p>
+    #endfor
+    #if(view.simple.links != nil):
+    <div class="fieldRow">
+		#for(link in view.simple.links):
+		<button id="#(link.id)">Test</button>
+			<a href="#(link.href)" class="#(link.classID)" id="#(link.id)">#(link.description)</a>
+		#endfor
+	</div>
+	#endif
+	#if(view.simple.buttons != nil):
+	<div class="fieldRow">
+		#for(button in view.simple.buttons):
+		<button id="#(button.id)">#(button.description)</button>
+		#endfor
+	</div>
+	#endif
+</div>
+#endif
+#endfor

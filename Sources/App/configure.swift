@@ -22,7 +22,6 @@ public func configure(_ app: Application) throws {
     app.views.use(.leaf)
     app.leaf.cache.isEnabled = app.environment.isRelease
     app.leaf.configuration.rootDirectory = "/Users/mathisfechner/Documents/Swift/Vapor/Eliterover/Sources/App/Views"
-    app.leaf.tags[ContentLeafTag.name] = ContentLeafTag()
     
     // MARK: Migrations
     app.migrations.add(CreateUser())

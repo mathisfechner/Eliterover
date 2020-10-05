@@ -9,6 +9,7 @@ import Foundation
 
 class Elite {
     static let date = defaultDate.self
+    static let view = defaultView.self
 }
 
 class defaultDate {
@@ -17,4 +18,8 @@ class defaultDate {
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
         return formatter
     }()
+}
+
+class defaultView {
+    static let mainPath = "NewMain"
 }

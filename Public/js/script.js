@@ -1,10 +1,5 @@
-acceptCookie()
-
-function acceptCookie() {
-	var cookieButton = document.getElementById("cookie");
-	cookieButton.addEventListener("click",function() {
-		var request = new XMLHttpRequest();
-		request.open("POST","accept/cookies");
-		request.send();
+function answer(path, divid) {
+	fetch(path, {method: "post"}).then(function(response) {
+		document.getElementById(divid).animate([{height: document.getElementById(divid).scrollHeight},{height: 0, opacity: 0, padding: 0, margin: 0}], {duration: 200, iterations: 1, fill: "forwards"}).finished.then(function() {document.getElementById(divid).remove()})
 	});
 }

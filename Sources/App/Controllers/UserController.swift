@@ -52,21 +52,23 @@ final class UserController: RouteCollection {
     
     func profile(req: Request) throws -> EventLoopFuture<View> {
         let user = try req.auth.require(User.self)
-        return req.view.render("Main", MainContent(title: "Eliterover", description: "Profile", Content: [
-            .init(simple: .init(title: "Profile", text: ["You are logged in as: "+user.name, "Nice to see you again!"]))
+        return req.view.render(Elite.view.mainPath, mainViewData(title: "Eliterover", content: [
+            .init(id: user.name, title: "Profile", text: ["You are logged in as: "+user.name, "Nice to see you again!"])
         ], for: req))
     }
     
     func getRegistrate(req: Request) throws -> EventLoopFuture<View> {
-        let input = MainContent(title: "Registration", description: "...", Content: [
-            .init(form: formView(title: "Registration", action: "registrate", input: [
-                .init(description: "Username", identifier: "username", placeholder: "Enter Username", type: "text"),
-                .init(description: "Password", identifier: "password", placeholder: "Enter Password", type: "password")
-                ], links: [
-                .init(href: "/login", description: "I have an account already")
-            ]))
+        let input = mainViewData(title: "Registration", content: [
+            .init(id: "registration", title: "Registration", forms: [
+                .init(send: "registrate", input: [
+                    .init(description: "Username", identifier: "username", placeholder: "Enter Username", type: "text"),
+                    .init(description: "Password", identifier: "password", placeholder: "Enter Password", type: "password")
+                ])
+            ], links: [
+                .init(href: "/login", description: "i have an account already", classID: "little")
+            ])
         ], for: req)
-        return req.view.render("Main",input)
+        return req.view.render(Elite.view.mainPath, input)
     }
     
     func registrate(req: Request) throws -> EventLoopFuture<String> {
@@ -76,8 +78,8 @@ final class UserController: RouteCollection {
     }
     
     func getLogin(req: Request) throws -> EventLoopFuture<View> {
-        let newInput = mainViewData(title: "Login", content: [
-            .init(id: "login", title: "Login", forms: [
+        let input = mainViewData(title: "Login", content: [
+            .init(id: "Login", title: "Login", forms: [
                 .init(
                     send: "login",
                     errorMessage: req.session.data["loginFail"] == nil ? nil : Date().timeIntervalSince(Elite.date.dateFormatter.date(from: req.session.data["loginFail"]!)!) < TimeInterval(60) ? "Invalid username or password, please try again" : nil,
@@ -89,11 +91,11 @@ final class UserController: RouteCollection {
                 .init(href: "registrate", description: "Don't have an account", classID: "little")
             ])
         ], for: req)
-        
-        return req.view.render("NewMain", newInput)
+        return req.view.render(Elite.view.mainPath, input)
     }
     
     func login(req: Request) throws -> Response {
+        print(req)
         let user = (try? req.auth.require(User.self))
         if user == nil {
             req.session.data["loginFail"] = Elite.date.dateFormatter.string(from: Date())
