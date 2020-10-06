@@ -20,7 +20,7 @@ struct UserCredentialsAuthenticator: CredentialsAuthenticator {
     
     func authenticate(credentials: DTO, for req: Request) -> EventLoopFuture<Void> {
         return User.query(on: req.db)
-            .filter(\.$name == credentials.username)
+            .filter(\.$username == credentials.username)
             .first()
             .map {
                 do {

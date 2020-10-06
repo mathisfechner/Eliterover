@@ -24,5 +24,6 @@ public func configure(_ app: Application) throws {
     app.leaf.configuration.rootDirectory = "/Users/mathisfechner/Documents/Swift/Vapor/Eliterover/Sources/App/Views"
     
     // MARK: Migrations
-    app.migrations.add(CreateUser())
+    app.migrations.add(UpdateUser())
+    try app.autoMigrate().wait()
 }

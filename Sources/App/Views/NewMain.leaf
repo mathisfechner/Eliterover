@@ -64,7 +64,7 @@
 						  #if(field.description != nil):
 						  <label for="#(field.identifier)">#(field.description)</label>
 						  #endif
-						  <input form="#(form.send)" class="#(field.classID)" name="#(field.identifier)" placeholder="#(field.placeholder)" type="#(field.type)">
+						  <input form="#(form.send)" class="#(field.classID)" name="#(field.identifier)" placeholder="#(field.placeholder)" type="#(field.type)" #(field.restrictions)>
 					  </div>
 					  #endfor
 					  <button type="submit">#(form.send)</button>

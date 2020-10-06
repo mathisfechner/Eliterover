@@ -35,6 +35,9 @@ a.normal {
 	height: 0;
 	opacity: 0;
 }
+p {
+    font-size: 0.85rem;
+}
 
 
 
@@ -99,11 +102,11 @@ aside {
 	height: auto;
 }
 .content label {
-	font-size: 0.75rem;
+	font-size: 0.85rem;
 	padding: 0 0.5rem 0 0.5rem;
 	float: left;
 	text-align: right;
-	flex-basis: 20%;
+	flex-basis: 30%;
 	margin-top: auto;
 	margin-bottom: auto;
 }
@@ -126,7 +129,7 @@ aside {
 	flex-basis: 100%;
 }
 .field {
-	flex-basis: 80%;
+	flex-basis: 70%;
 }
 .singleField {
 	flex-basis: 100%;

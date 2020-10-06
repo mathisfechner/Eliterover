@@ -48,8 +48,9 @@ class contentViewData: Encodable {
         if classID != nil {self.classID += " " + classID!}
     }
     
-    convenience init(id: String,  title: String, classID: String? = nil, forms: [form], links: [link]? = nil) {
+    convenience init(id: String,  title: String, classID: String? = nil, text: [String]? = nil, forms: [form], links: [link]? = nil) {
         self.init(id: id, classID: classID, title: title)
+        self.text = text
         self.forms = forms
         self.links = links
     }
@@ -71,13 +72,15 @@ class contentViewData: Encodable {
             var identifier: String
             var placeholder: String
             var type: String
+            var restrictions: String?
             var classID: String
             
-            init(description: String? = nil, identifier: String, placeholder: String, type: String) {
+            init(description: String? = nil, identifier: String, placeholder: String, type: String, restrictions: String? = nil) {
                 self.description = description
                 self.identifier = identifier
                 self.placeholder = placeholder
                 self.type = type
+                self.restrictions = restrictions
                 classID = description == nil ? "singleField" : "field"
             }
         }

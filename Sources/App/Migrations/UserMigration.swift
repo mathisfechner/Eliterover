@@ -23,3 +23,23 @@ struct CreateUser: Migration {
          database.schema("user").delete()
      }
 }
+
+
+struct UpdateUser: Migration {
+    // Prepares the database for storing User models.
+     func prepare(on database: Database) -> EventLoopFuture<Void> {
+         database.schema("user")
+            .deleteField("name")
+            .field("firstname", .string)
+            .field("lastname", .string)
+            .field("username", .string)
+            .field("email", .string)
+            .field("birthday", .date)
+            .update()
+     }
+
+     // Optionally reverts the changes made in the prepare method.
+     func revert(on database: Database) -> EventLoopFuture<Void> {
+         database.schema("user").delete()
+     }
+}
