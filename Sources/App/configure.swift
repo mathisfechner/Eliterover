@@ -17,13 +17,13 @@ public func configure(_ app: Application) throws {
     app.middleware.use(UserRequestAuthenticator())
     
     // MARK: Database
-    app.databases.use(.postgres(hostname: "localhost", username: "mathisfechner", password: "", database: "mathisfechner"), as: .psql)
+    app.databases.use(.postgres(hostname: "192.168.2.124", username: "max", password: "max", database: "EliteDB"), as: .psql)
     // MARK: Leaf
     app.views.use(.leaf)
     app.leaf.cache.isEnabled = app.environment.isRelease
     app.leaf.configuration.rootDirectory = "/Users/mathisfechner/Documents/Swift/Vapor/Eliterover/Sources/App/Views"
     
     // MARK: Migrations
-    app.migrations.add(UpdateUser())
+    app.migrations.add(CreateUser())
     try app.autoMigrate().wait()
 }
