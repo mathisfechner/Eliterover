@@ -7,4 +7,5 @@ DerivedData/
 db.sqlite
 .swiftpm
 .idea
+Package.resolved
 
