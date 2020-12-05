@@ -11,19 +11,19 @@ import Fluent
 struct CreateUser: Migration {
     // Prepares the database for storing User models.
      func prepare(on database: Database) -> EventLoopFuture<Void> {
-         database.schema("user")
+        database.schema(User.schema)
             .id()
-            .field("firstname", .string)
-            .field("lastname", .string)
-            .field("username", .string)
-            .field("passwordHash", .string)
-            .field("email", .string)
-            .field("birthday", .date)
+            .field(.firstname, .string)
+            .field(.lastname, .string)
+            .field(.username, .string)
+            .field(.passwordHash, .string)
+            .field(.email, .string)
+            .field(.birthday, .date)
             .create()
      }
 
      // Optionally reverts the changes made in the prepare method.
      func revert(on database: Database) -> EventLoopFuture<Void> {
-         database.schema("user").delete()
+         database.schema(User.schema).delete()
      }
 }

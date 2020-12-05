@@ -11,7 +11,7 @@ import Leaf
 final class MainController : RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         routes.get("", use: start)
-        routes.get("accept", "cookies", use: cookie)
+        routes.get("accept", "cookies", use: getCookie)
         routes.post("accept", "cookies", use: postCookie)
     }
     
@@ -24,7 +24,7 @@ final class MainController : RouteCollection {
         }
     }
     
-    func cookie(req: Request) throws -> Response {
+    func getCookie(req: Request) throws -> Response {
         req.session.data["Cookies"] = "accepted"
         return req.redirect(to: "/")
     }

@@ -1,7 +1,7 @@
 /*general*/
 html {
 	background-color: \#EDEDED;
-	font-family: 'Source Sans Pro',Helvetica Neue,Helvetica,Arial,sans-serif;
+	font-family: 'SimplonNormRegular', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
 	font-size: 20pt;
 }
 h1 {
@@ -23,12 +23,12 @@ a.little {
 }
 a.normal {
 	text-align: center;
-	font-size: 0.75rem;
+	font-size: 1.2rem;
 	background-color: \#8AE800;
 	border-width: 0 0 0 0;
 	padding: 0.25rem 0.5rem 0.25rem 0.5rem;
 	margin: 0.25rem 0 0.25rem 0;
-	border-radius: 0.75rem 0.75rem 0.75rem 0.75rem;
+	border-radius: 1.2rem;
 	width: 100%;
 }
 .hidden {
@@ -36,7 +36,7 @@ a.normal {
 	opacity: 0;
 }
 p {
-    font-size: 0.85rem;
+    font-size: 1.2rem;
 }
 
 
@@ -102,7 +102,7 @@ aside {
 	height: auto;
 }
 .content label {
-	font-size: 0.85rem;
+	font-size: 1.2rem;
 	padding: 0 0.5rem 0 0.5rem;
 	float: left;
 	text-align: right;
@@ -112,11 +112,11 @@ aside {
 }
 .content input {
 	background-color: \#EDEDED;
-	font-size: 0.75rem;
+	font-size: 1rem;
 	padding: 0.25rem 0.5rem 0.25rem 0.5rem;
 	margin: 0.25rem 0 0.25rem 0;
 	border-width: 0 0 0 0;
-	border-radius: 0.75rem 0.75rem 0.75rem 0.75rem;
+	border-radius: 1rem;
 	min-width: 0;
 }
 .content input::placeholder {
@@ -136,12 +136,12 @@ aside {
 }
 
 .content button {
-	font-size: 0.75rem;
+	font-size: 1.2rem;
 	background-color: \#8AE800;
 	border-width: 0 0 0 0;
 	padding: 0.25rem 0.5rem 0.25rem 0.5rem;
 	margin: 0.25rem 0 0.25rem 0;
-	border-radius: 0.75rem 0.75rem 0.75rem 0.75rem;
+	border-radius: 1.2rem;
 	width: 100%;
 }
 .content button:hover {
@@ -167,8 +167,10 @@ footer {
 
 
 /*media*/
-@media (min-width: 50rem) {.main {max-width: 25rem}}
+@media (min-width: 50rem) {.main {max-width: 30rem}}
+#if(aside!=nil):
 @media (max-width: 42rem) {.main {padding: 0 0 0 7rem};}
+#endif
 @media (max-width: 28rem) {
 	aside {
 		float: inherit;

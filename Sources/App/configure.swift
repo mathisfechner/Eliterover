@@ -24,6 +24,7 @@ public func configure(_ app: Application) throws {
     app.leaf.configuration.rootDirectory = "Sources/App/Views"
     
     // MARK: Migrations
-    app.migrations.add(CreateUser())
+    app.migrations.add(User.migrations)
+    app.migrations.add(UserInformation.migrations)
     try app.autoMigrate().wait()
 }

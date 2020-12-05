@@ -25,10 +25,7 @@
 		  <nav>
 			  <ul>
 				  <li>
-					  <a>Elite</a>
-				  </li>
-				  <li>
-					  <a href="/">Über uns</a>
+					  <a href="/everybody">Elite</a>
 				  </li>
 				  #if(user != nil):
 				  <li>
@@ -39,8 +36,10 @@
 		  </nav>
 	  </header>
 	  <main>
+          #if(aside != nil):
 		  <aside class="content">
 		  </aside>
+          #endif
 		  <div class="main">
 			  #for(view in content):
 			  <div class="#(view.classID)" id="#(view.id)">
@@ -58,7 +57,7 @@
 				  <p class="error">#(form.errorMessage)</p>
 				  #endif
 				  
-				  <form action="#(form.send)" method="post" id="#(form.send)">
+				  <form action="#(form.send)" method="post" enctype="multipart/form-data" id="#(form.send)">
 					  #for(field in form.input):
 					  <div class="fieldRow">
 						  #if(field.description != nil):

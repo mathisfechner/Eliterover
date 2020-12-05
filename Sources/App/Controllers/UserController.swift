@@ -14,13 +14,14 @@ final class UserController: RouteCollection {
         routes.get(":username", use: getUser)
         routes.get("profile", use: profile)
         routes.get("registrate", use: getRegistrate)
-        routes.post("registrate", use: registrate)
+        routes.post("registrate", use: postRegistrate)
         routes.get("login", use: getLogin)
-        routes.post("login", use: login)
+        routes.post("login", use: postLogin)
         routes.get("logout", use: logout)
-        routes.get("edit", use: edit)
-        routes.post("editUser", use: editUser)
-        routes.post("changePassword", use: changePassword)
+        routes.on(.POST, "adduserinformation", body: .stream, use: addUserInformation)
+        routes.get("edit", use: getEdit)
+        routes.post("editUser", use: postEditUser)
+        routes.post("changePassword", use: postChangePassword)
         routes.get("everybody", use: everybody)
         routes.get("deleteAllUsers", use: deleteAllUsers)
     }
@@ -38,11 +39,7 @@ final class UserController: RouteCollection {
                 .flatMap{
                     do {
                         if let user = $0 {
-                            return req.view.render("SubViews/profile", [
-                                "title":"Profile",
-                                "description":"Profile",
-                                "username":user.username
-                            ])
+                            return req.view.render(Elite.view.mainPath, mainViewData(title: user.username, content: [.init(id: user.id!.uuidString, title: user.username, text: [user.firstname+" "+user.lastname, Elite.date.inputFormatter.string(from: user.birthday), user.email,"Auf der Weiblichkeitsskala von 0 bis 1 eine \(user.sex)"])], for: req))
                         } else {
                             throw Abort(.notFound)
                         }
@@ -53,19 +50,26 @@ final class UserController: RouteCollection {
         }
     }
     
+    
+    
     func profile(req: Request) throws -> EventLoopFuture<View> {
         let user = try req.auth.require(User.self)
         return req.view.render(Elite.view.mainPath, mainViewData(title: "Eliterover", content: [
-            .init(id: user.username, title: "Profile", text: ["You are logged in as: "+user.username, "Nice to see you again!"])
+            .init(id: user.username, title: "Profile", text: ["You are logged in as: "+user.username, "Nice to see you again!"], links: [.init(href: "/edit", description: "Edit Userdata", classID: "normal")]),
         ], for: req))
     }
+    
+    
     
     func getRegistrate(req: Request) throws -> EventLoopFuture<View> {
         let input = mainViewData(title: "Registration", content: [
             .init(id: "registration", title: "Registration", forms: [
-                .init(send: "registrate", input: [
+                .init(send: "registrate",
+                      errorMessage: Elite.date.stillActiveError(req.session.data["registrationError"]) ? "Try again, username or eMail may already be taken." : nil,
+                      input: [
                     .init(description: "First name", identifier: "firstname", placeholder: "Max", type: "text"),
                     .init(description: "Last name", identifier: "lastname", placeholder: "Mustermann", type: "text"),
+                    .init(description: "Sex | M - W", identifier: "sex", placeholder: "", type: "range", restrictions: "min=\"0\" max=\"1\" step=\"0.01\""),
                     .init(description: "Username", identifier: "username", placeholder: "Enter Username", type: "text"),
                     .init(description: "Password", identifier: "password", placeholder: "Enter Password", type: "password"),
                     .init(description: "Retype password", identifier: "repassword", placeholder: "Retype Password", type: "password"),
@@ -76,38 +80,50 @@ final class UserController: RouteCollection {
                 .init(href: "/login", description: "i have an account already", classID: "little")
             ])
         ], for: req)
-        if req.session.data["registrationError"] != nil && Date().timeIntervalSince(Elite.date.dateFormatter.date(from: req.session.data["registrationError"]!)!) < TimeInterval(60) {
-            input.content.insert(ErrorController.registrationError(req: req), at: 0)
-        }
         return req.view.render(Elite.view.mainPath, input)
     }
     
-    func registrate(req: Request) throws -> EventLoopFuture<Response> {
+    
+    
+    func postRegistrate(req: Request) throws -> EventLoopFuture<Response> {
         let userform = try req.content.decode(User.DTO.self)
-        let user = User(firstname: userform.firstname, lastname: userform.lastname, username: userform.username, passwordHash: (try req.password.hash(userform.password ?? "")), email: userform.email, birthday: Elite.date.inputFormatter.date(from: userform.birthday) ?? Date())
-        return User.query(on: req.db).filter(\.$username == user.username)
-            .first()
-            .map{
-                if $0 == nil && userform.password == userform.repassword {
-                    _ = user.create(on: req.db)
-                    req.session.data["id"] = user.id?.uuidString
-                    let backToPath = req.session.data["backToPath"] ?? "/"
-                    req.session.data["bakToPath"] = nil
-                    req.session.data["registrationError"] = nil
-                    return req.redirect(to: backToPath)
-                } else {
-                    req.session.data["registrationError"] = Elite.date.dateFormatter.string(from: Date())
-                    return req.redirect(to: "registrate")
-                }
-        }
+        let user = User(firstname: userform.firstname,
+                        lastname: userform.lastname,
+                        sex: (userform.sex as NSString).floatValue,
+                        username: userform.username,
+                        passwordHash: (try Bcrypt.hash(userform.password ?? "")),
+                        email: userform.email.uppercased(),
+                        birthday: Elite.date.inputFormatter.date(from: userform.birthday) ?? Date())
+        return User.query(on: req.db).group(.or) { group in
+            group.filter(\.$username == userform.username)
+                .filter(\.$email == userform.email)
+        }.first().map{ result -> Response in
+                    if result == nil && userform.password == userform.repassword {
+                        _ = user.create(on: req.db)
+                        
+                        MailController.sendVerificationLink(req: req, user: user)
+                        
+                        req.session.data["id"] = user.id?.uuidString
+                        let backToPath = req.session.data["backToPath"] ?? "/"
+                        req.session.data["bakToPath"] = nil
+                        req.session.data["registrationError"] = nil
+                        
+                        return req.redirect(to: backToPath)
+                    } else {
+                        req.session.data["registrationError"] = Elite.date.setErrorDate()
+                        return req.redirect(to: "registrate")
+                    }
+            }
     }
+    
+    
     
     func getLogin(req: Request) throws -> EventLoopFuture<View> {
         let input = mainViewData(title: "Login", content: [
             .init(id: "Login", title: "Login", forms: [
                 .init(
                     send: "login",
-                    errorMessage: req.session.data["loginFail"] == nil ? nil : Date().timeIntervalSince(Elite.date.dateFormatter.date(from: req.session.data["loginFail"]!)!) < TimeInterval(60) ? "Invalid username or password, please try again" : nil,
+                    errorMessage: Elite.date.stillActiveError(req.session.data["loginFail"]) ? "Invalid username or password, please try again" : nil,
                     input: [
                         .init(identifier: "username", placeholder: "Enter Username", type: "text", restrictions: "autofocus required"),
                         .init(identifier: "password", placeholder: "Enter Password", type: "password", restrictions: "required")
@@ -119,8 +135,9 @@ final class UserController: RouteCollection {
         return req.view.render(Elite.view.mainPath, input)
     }
     
-    func login(req: Request) throws -> Response {
-        print(req)
+    
+    
+    func postLogin(req: Request) throws -> Response {
         let user = (try? req.auth.require(User.self))
         if user == nil {
             req.session.data["loginFail"] = Elite.date.dateFormatter.string(from: Date())
@@ -132,25 +149,90 @@ final class UserController: RouteCollection {
         return req.redirect(to: backToPath)
     }
     
+    
+    
     func logout(req: Request) throws -> Response {
         req.session.destroy()
         return req.redirect(to: "/")
     }
     
-    func edit(req: Request) throws -> EventLoopFuture<View> {
+    
+    
+    static func addUserInformationForm(req: Request) -> contentViewData {
+        contentViewData.init(id: "image", title: "Upload Image", forms: [
+            .init(send: "adduserinformation", input: [
+                .init(identifier: "imageData", placeholder: "imageData", type: "file")
+            ])
+        ])
+    }
+
+    
+    func addUserInformation(req: Request) throws -> Response {
+        let image = try req.content.decode(ImageDTO.self)
+        req.fileio.writeFile(ByteBuffer(data: image.imageData), at: "id.png")
+        return Response()
+        
+        struct ImageDTO: Content {
+            var imageData: Data
+        }
+        
+    }
+    
+/*
+    func streamPng(req: Request) throws -> Response {
+        var count = 0
+        var count2 = 0
+        var stream = OutputStream(toFileAtPath: "id" + count2.description + ".png", append: false)
+        stream?.open()
+        req.body.drain() {
+            switch $0 {
+            case .buffer(let buffer):
+                count += 1
+                var data = Data(buffer.readableBytesView).first
+                if data != nil {
+                    if stream!.hasSpaceAvailable {
+                        stream?.write(&data!, maxLength: buffer.readableBytesView.count)
+                    } else {
+                        stream?.close()
+                        try? FileManager().copyItem(at: URL(fileURLWithPath: "id" + count2.description + ".png"), to: URL(fileURLWithPath: "id" + (count2 + 1).description + ".png"))
+                        count2 += 1
+                        stream = OutputStream(toFileAtPath: "id" + count2.description + ".png", append: true)
+                        stream?.open()
+                        stream?.write(&data!, maxLength: buffer.readableBytesView.count)
+                    }
+                }
+//                var header = HTTPHeaders()
+//                header.add(name: "Image", value: "image/png")
+//                return Response(status: .ok, version: .init(major: .max, minor: .min), headers: header, body: .init(buffer: buffer))
+                return req.eventLoop.makeSucceededFuture(())
+            case .error(let error):
+                print(error.localizedDescription)
+                return req.eventLoop.makeSucceededFuture(())
+            case .end:
+                print("last")
+                stream?.close()
+                return req.eventLoop.makeSucceededFuture(())
+            }
+        }
+        return Response()
+    }
+*/
+    
+    func getEdit(req: Request) throws -> EventLoopFuture<View> {
         if let user = req.auth.get(User.self) {
             let input = mainViewData(title: "Edit Userdata", content: [
                 .init(id: "EditUser", title: "Edit Userdata", text: ["Just type in the data you wanna change, don't touch the other fields and click editUser."], forms: [
-                    .init(send: "editUser", input: [
+                    .init(send: "editUser",input: [
                         .init(description: "First Name", identifier: "firstname", placeholder: user.firstname, type: "text"),
                         .init(description: "Last Name", identifier: "lastname", placeholder: user.lastname, type: "text"),
-                        .init(description: "Usernam", identifier: "username", placeholder: user.username, type: "text"),
-                        .init(description: "eMail", identifier: "email", placeholder: user.email, type: "email"),
+                        .init(description: "Sex | M - W", identifier: "sex", placeholder: "", type: "range", restrictions: "min=\"0\" max=\"1\" step=\"0.01\" value=\"\(user.sex)\""),
+                        .init(description: "Username", identifier: "username", placeholder: user.username, type: "text"),
+                        .init(description: "eMail", identifier: "email", placeholder: user.email.lowercased(), type: "email"),
                         .init(description: "Date of birth", identifier: "birthday", placeholder: Elite.date.inputFormatter.string(from: user.birthday), type: "date", restrictions: "pattern=\"[0-3][0-9].[0-1][0-9].[0-9]{4}\"")
                     ])
                 ]),
-                .init(id: "changePassword", title: "Change Password", forms: [
-                    .init(send: "changePassword", input: [
+                .init(id: "ChangePassword", title: "Change Password", forms: [
+                    .init(send: "changePassword", errorMessage: Elite.date.stillActiveError(req.session.data["changePasswordError"]) ? "Failure, please try again." : nil, input: [
                         .init(description: "Old password", identifier: "oldPassword", placeholder: "Enter old password", type: "password"),
                         .init(description: "New password", identifier: "password", placeholder: "Enter new password", type: "password"),
                         .init(description: "Retype password", identifier: "repassword", placeholder: "Retype new password", type: "password")
@@ -164,40 +246,84 @@ final class UserController: RouteCollection {
         }
     }
     
-    func editUser(req: Request) throws -> Response {
+    
+    
+    func postEditUser(req: Request) throws -> EventLoopFuture<Response> {
         if let user = req.auth.get(User.self) {
             let userform = try req.content.decode(User.DTO.self)
             user.firstname = userform.firstname == "" ? user.firstname : userform.firstname
             user.lastname = userform.lastname == "" ? user.lastname : userform.lastname
-            if userform.username != "" {
-                User.query(on: req.db).filter(\.$username == userform.username)
-                    .first()
-                    .map {
-                        if $0 == nil {
-                            user.username = userform.username
-                            user.update(on: req.db)
-                        }
+            user.birthday = userform.birthday == "" ? user.birthday : Elite.date.inputFormatter.date(from: userform.birthday) ?? Date()
+            user.sex = (userform.sex as NSString).floatValue
+            
+            if userform.username != "" || userform.email != "" {
+                return User.query(on: req.db).group(.or) {
+                    if userform.username != "" {$0.filter(\.$username == userform.username)}
+                    if userform.email != "" {
+                        $0.filter(\.$email == userform.email.lowercased())
+                        $0.filter(\.$email == userform.email.uppercased())
+                    }
+                }.all().flatMap { users -> EventLoopFuture<Response> in
+                    if userform.username != "" && users.filter({$0.username == userform.username}).first == nil {
+                        user.username = userform.username
+                    }
+                    if userform.email != "" && users.filter({$0.email == userform.email}).first == nil {
+                        user.email = userform.email.uppercased()
+                        MailController.sendVerificationLink(req: req, user: user)
+                    }
+                    return user.update(on: req.db).map {
+                        req.redirect(to: "edit")
+                    }
+                }
+            } else {
+                return user.update(on: req.db).map {
+                    req.redirect(to: "edit")
                 }
             }
-            user.email = userform.email == "" ? user.email : userform.email
-            user.birthday = userform.birthday == "" ? user.birthday : Elite.date.inputFormatter.date(from: userform.birthday) ?? Date()
-            user.update(on: req.db)
-            return req.redirect(to: "edit")
         } else {
-            return req.redirect(to: "edit")
+            req.session.data["changePasswordError"] = nil
+            return req.eventLoop.makeSucceededFuture(req.redirect(to: "edit"))
         }
     }
     
-    func changePassword(req: Request) throws -> Response {
-        req.redirect(to: "edit")
+    
+    
+    func postChangePassword(req: Request) throws -> EventLoopFuture<Response> {
+        let passwordform = try req.content.decode(User.passwordDTO.self)
+        if let user = req.auth.get(User.self), try Bcrypt.verify(passwordform.oldPassword, created: user.passwordHash) && passwordform.password == passwordform.repassword {
+            user.passwordHash = try Bcrypt.hash(passwordform.password)
+            req.session.data["changePasswordError"] = nil
+            return user.update(on: req.db).map {
+                req.redirect(to: "edit")
+            }
+        } else {
+            req.session.data["changePasswordError"] = Elite.date.setErrorDate()
+            return req.eventLoop.makeSucceededFuture(req.redirect(to: "edit"))
+        }
     }
 
-    func everybody(req: Request) throws -> EventLoopFuture<[User]> {
-        User.query(on: req.db).all()
+    
+    
+    func everybody(req: Request) throws -> EventLoopFuture<View> {
+        if req.auth.get(User.self) != nil {
+            let viewData = mainViewData(title: "Everybody", content: [], for: req)
+            return User.query(on: req.db).all().flatMap {
+                for user in $0 {
+                    viewData.content.append(.init(id: user.id!.uuidString, title: user.username, text: [user.firstname+" "+user.lastname, user.email], links: [.init(href: "/"+user.username, description: "View more", classID: "normal")]))
+                }
+                return  req.view.render(Elite.view.mainPath, viewData)
+            }
+        } else {
+            req.session.data["backToPath"] = "everybody"
+            return try getLogin(req: req)
+        }
     }
     
-    func deleteAllUsers(req: Request) throws -> Response {
-        User.query(on: req.db).delete()
-        return req.redirect(to: "/")
+    
+    
+    func deleteAllUsers(req: Request) throws -> EventLoopFuture<Response> {
+        return User.query(on: req.db).delete().map {
+            return req.redirect(to: "/")
+        }
     }
 }
