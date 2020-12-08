@@ -18,7 +18,7 @@ final class UserController: RouteCollection {
         routes.get("login", use: getLogin)
         routes.post("login", use: postLogin)
         routes.get("logout", use: logout)
-        routes.on(.POST, "adduserinformation", body: .stream, use: addUserInformation)
+        routes.on(.POST, "adduserinformation", body: .collect(maxSize: 5000000), use: addUserInformation)
         routes.get("edit", use: getEdit)
         routes.post("editUser", use: postEditUser)
         routes.post("changePassword", use: postChangePassword)
@@ -169,13 +169,21 @@ final class UserController: RouteCollection {
     
     func addUserInformation(req: Request) throws -> Response {
         let image = try req.content.decode(ImageDTO.self)
-        req.fileio.writeFile(ByteBuffer(data: image.imageData), at: "id.png")
-        return Response()
-        
-        struct ImageDTO: Content {
-            var imageData: Data
+        let user = req.auth.get(User.self)
+        if(user == nil){
+            return req.redirect(to: "/")
         }
-        
+        print(image.imageData.contentType?.type)
+        print(image.imageData.contentType?.subType)
+        print(image.imageData.filename)
+        if let filetype = image.imageData.contentType?.subType {
+            req.fileio.writeFile(image.imageData.data, at: "profilepicture/\(user!.id!.uuidString).\(filetype)")
+        }
+        return req.redirect(to: "/")
+
+        struct ImageDTO: Content {
+            var imageData: File
+        }
     }
     
 /*
