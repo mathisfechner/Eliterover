@@ -16,7 +16,7 @@ class UserInformation: Model {
     @Parent(key: .userId) var user: User
     
     //MARK: introduction
-    @Field(key: .imageName) var imageType: String?
+    @Field(key: .imageType) var imageType: String?
     @Field(key: .imageData) var imageData: Data?
     @Field(key: .description) var description: String?
     
