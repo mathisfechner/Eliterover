@@ -16,7 +16,7 @@ class UserInformation: Model {
     @Parent(key: .userId) var user: User
     
     //MARK: introduction
-    @Field(key: .imageName) var imageName: String?
+    @Field(key: .imageType) var imageType: String?
     @Field(key: .imageData) var imageData: Data?
     @Field(key: .description) var description: String?
     
@@ -63,7 +63,7 @@ extension UserInformation {
             database.schema(UserInformation.schema)
                 .id()
                 .field(.userId, .uuid, .required)
-                .field(.imageName, .string)
+                .field(.imageType, .string)
                 .field(.imageData, .data)
                 .field(.dateOfJoin, .date)
                 .field(.region, .string)
@@ -90,7 +90,7 @@ extension UserInformation {
 extension FieldKey {
     static var userId: Self {"userId"}
     
-    static var imageName: Self {"imageName"}
+    static var imageType: Self {"imageType"}
     static var imageData: Self {"imageData"}
     static var description: Self {"description"}
     static var dateOfJoin: Self {"dateOfJoin"}
