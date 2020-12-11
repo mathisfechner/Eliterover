@@ -12,6 +12,9 @@
 						<a>Elite</a>
 					</li>
                     <li>
+                        <a>Guides</a>
+                    </li>
+                    <li>
                         <a href="/">Über uns</a>
                     </li>
                     #if(user != nil):

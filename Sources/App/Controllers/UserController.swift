@@ -87,12 +87,12 @@ final class UserController: RouteCollection {
     
     func postRegistrate(req: Request) throws -> EventLoopFuture<Response> {
         let userform = try req.content.decode(User.DTO.self)
-        let user = User(firstname: userform.firstname,
-                        lastname: userform.lastname,
+        let user = User(firstname: userform.firstname.validate(),
+                        lastname: userform.lastname.validate(),
                         sex: (userform.sex as NSString).floatValue,
-                        username: userform.username,
+                        username: userform.username.validate(),
                         passwordHash: (try Bcrypt.hash(userform.password ?? "")),
-                        email: userform.email.uppercased(),
+                        email: userform.email.uppercased().validate(),
                         birthday: Elite.date.inputFormatter.date(from: userform.birthday) ?? Date())
         return User.query(on: req.db).group(.or) { group in
             group.filter(\.$username == userform.username)
@@ -167,19 +167,18 @@ final class UserController: RouteCollection {
     }
 
     
-    func addUserInformation(req: Request) throws -> Response {
+    func addUserInformation(req: Request) throws -> EventLoopFuture<Response> {
         let image = try req.content.decode(ImageDTO.self)
         let user = req.auth.get(User.self)
         if(user == nil){
-            return req.redirect(to: "/")
+            return req.eventLoop.makeSucceededFuture(req.redirect(to: "/"))
         }
-        print(image.imageData.contentType?.type)
-        print(image.imageData.contentType?.subType)
-        print(image.imageData.filename)
         if let filetype = image.imageData.contentType?.subType {
-            req.fileio.writeFile(image.imageData.data, at: "profilepicture/\(user!.id!.uuidString).\(filetype)")
+            return req.fileio.writeFile(image.imageData.data, at: "profilepicture/\(user!.id!.uuidString).\(filetype)").map() {
+                req.fileio.streamFile(at: "profilepicture/\(user!.id!.uuidString).\(filetype)")
+            }
         }
-        return req.redirect(to: "/")
+        return req.eventLoop.makeSucceededFuture(req.redirect(to: "/"))
 
         struct ImageDTO: Content {
             var imageData: File
@@ -259,24 +258,24 @@ final class UserController: RouteCollection {
     func postEditUser(req: Request) throws -> EventLoopFuture<Response> {
         if let user = req.auth.get(User.self) {
             let userform = try req.content.decode(User.DTO.self)
-            user.firstname = userform.firstname == "" ? user.firstname : userform.firstname
-            user.lastname = userform.lastname == "" ? user.lastname : userform.lastname
+            user.firstname = userform.firstname == "" ? user.firstname : userform.firstname.validate()
+            user.lastname = userform.lastname == "" ? user.lastname : userform.lastname.validate()
             user.birthday = userform.birthday == "" ? user.birthday : Elite.date.inputFormatter.date(from: userform.birthday) ?? Date()
             user.sex = (userform.sex as NSString).floatValue
             
             if userform.username != "" || userform.email != "" {
                 return User.query(on: req.db).group(.or) {
-                    if userform.username != "" {$0.filter(\.$username == userform.username)}
+                    if userform.username != "" {$0.filter(\.$username == userform.username.validate())}
                     if userform.email != "" {
-                        $0.filter(\.$email == userform.email.lowercased())
-                        $0.filter(\.$email == userform.email.uppercased())
+                        $0.filter(\.$email == userform.email.lowercased().validate())
+                        $0.filter(\.$email == userform.email.uppercased().validate())
                     }
                 }.all().flatMap { users -> EventLoopFuture<Response> in
-                    if userform.username != "" && users.filter({$0.username == userform.username}).first == nil {
-                        user.username = userform.username
+                    if userform.username != "" && users.filter({$0.username == userform.username.validate()}).first == nil {
+                        user.username = userform.username.validate()
                     }
                     if userform.email != "" && users.filter({$0.email == userform.email}).first == nil {
-                        user.email = userform.email.uppercased()
+                        user.email = userform.email.uppercased().validate()
                         MailController.sendVerificationLink(req: req, user: user)
                     }
                     return user.update(on: req.db).map {
