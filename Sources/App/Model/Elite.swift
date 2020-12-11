@@ -21,6 +21,9 @@ class defaultRouting {
     static func decodeValidURLComponent(from component: String) -> String {
         return component.replacingOccurrences(of: "$2", with: "/").replacingOccurrences(of: "$1", with: "$")
     }
+    static func validate(input: String) -> String {
+        return input.validate()
+    }
 }
 
 class defaultDate {
