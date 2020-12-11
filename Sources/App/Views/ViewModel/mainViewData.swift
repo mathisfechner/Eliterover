@@ -9,7 +9,7 @@ import Leaf
 import VaporCSRF
 
 class mainViewData: Encodable {
-    //var csrfToken: csrfToken
+    //var Token: csrfToken
     var title: String
     var user: User?
     var aside: String? = nil

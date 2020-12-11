@@ -9,6 +9,7 @@ import Vapor
 import Leaf
 import Fluent
 import VaporCSRF
+import App
 
 final class UserController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
@@ -65,7 +66,7 @@ final class UserController: RouteCollection {
     
     func getRegistrate(req: Request) throws -> EventLoopFuture<View> {
         let csrfToken = req.csrf.storeToken()
-        let input = mainViewData(/*csrfToken: csrfToken,*/ title: "Registration", content: [
+        let input = mainViewData(/*Token: csrfToken,*/ title: "Registration", content: [
             .init(id: "registration", title: "Registration", forms: [
                 .init(send: "registrate",
                       errorMessage: Elite.date.stillActiveError(req.session.data["registrationError"]) ? "Try again, username or eMail may already be taken." : nil,
