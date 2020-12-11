@@ -15,6 +15,7 @@ public func configure(_ app: Application) throws {
     app.middleware.use(app.sessions.middleware)
     app.middleware.use(UserCredentialsAuthenticator())
     app.middleware.use(UserRequestAuthenticator())
+
     
     // MARK: Database
     app.databases.use(.postgres(hostname: "192.168.2.124", username: "max", password: "max", database: "EliteDB"), as: .psql)
