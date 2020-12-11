@@ -25,10 +25,13 @@ final class UserController: RouteCollection {
         routes.get("everybody", use: everybody)
         routes.get("deleteAllUsers", use: deleteAllUsers)
     }
+    //apply middleware to routes
+
     
     
     
     func getUser(req: Request) throws -> EventLoopFuture<View> {
+
         if req.auth.get(User.self) == nil {
             req.session.data["backToPath"] = "/"+req.parameters.get("username")!
             return try! UserController().getLogin(req: req)
@@ -62,6 +65,7 @@ final class UserController: RouteCollection {
     
     
     func getRegistrate(req: Request) throws -> EventLoopFuture<View> {
+        //let csrfToken = req.csrf.storeToken()
         let input = mainViewData(title: "Registration", content: [
             .init(id: "registration", title: "Registration", forms: [
                 .init(send: "registrate",
@@ -86,6 +90,8 @@ final class UserController: RouteCollection {
     
     
     func postRegistrate(req: Request) throws -> EventLoopFuture<Response> {
+        //TODO test mit csrf
+        //try req.csrf.verifyToken()
         let userform = try req.content.decode(User.DTO.self)
         let user = User(firstname: userform.firstname.validate(),
                         lastname: userform.lastname.validate(),

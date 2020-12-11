@@ -8,4 +8,5 @@ db.sqlite
 .swiftpm
 .idea
 Package.resolved
+profilepicture.*
 

@@ -66,6 +66,7 @@
 						  <input form="#(form.send)" class="#(field.classID)" name="#(field.identifier)" placeholder="#(field.placeholder)" type="#(field.type)" #(field.restrictions)>
 					  </div>
 					  #endfor
+					  <input type="hidden" name="csrfToken" value="#(csrfToken)">
 					  <button type="submit">#(form.send)</button>
 				  </form>
 				  #endfor
