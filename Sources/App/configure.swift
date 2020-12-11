@@ -2,6 +2,7 @@ import Vapor
 import Leaf
 import Fluent
 import FluentPostgresDriver
+import VaporCSRF
 
 // configures your application
 public func configure(_ app: Application) throws {
@@ -16,6 +17,10 @@ public func configure(_ app: Application) throws {
     app.middleware.use(UserCredentialsAuthenticator())
     app.middleware.use(UserRequestAuthenticator())
 
+    //csrf key
+    app.csrf.setTokenContentKey("eliteKeykomplettrandom")
+    //kp ob das hierher gehört es tut aber nichts
+    let csrfTokenPotectedRoutes = app.grouped(CSRFMiddleware())
     
     // MARK: Database
     app.databases.use(.postgres(hostname: "192.168.2.124", username: "max", password: "max", database: "EliteDB"), as: .psql)

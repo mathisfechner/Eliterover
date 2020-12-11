@@ -8,6 +8,7 @@
 import Vapor
 import Leaf
 import Fluent
+import VaporCSRF
 
 final class UserController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
@@ -25,10 +26,8 @@ final class UserController: RouteCollection {
         routes.get("everybody", use: everybody)
         routes.get("deleteAllUsers", use: deleteAllUsers)
     }
-    //apply middleware to routes
-
-    
-    
+    //ich glaube das gehört hierher er kennt aber app hier nicht...
+    //let csrfTokenPotectedRoutes = app.grouped(CSRFMiddleware())
     
     func getUser(req: Request) throws -> EventLoopFuture<View> {
 
@@ -65,8 +64,8 @@ final class UserController: RouteCollection {
     
     
     func getRegistrate(req: Request) throws -> EventLoopFuture<View> {
-        //let csrfToken = req.csrf.storeToken()
-        let input = mainViewData(title: "Registration", content: [
+        let csrfToken = req.csrf.storeToken()
+        let input = mainViewData(/*csrfToken: csrfToken,*/ title: "Registration", content: [
             .init(id: "registration", title: "Registration", forms: [
                 .init(send: "registrate",
                       errorMessage: Elite.date.stillActiveError(req.session.data["registrationError"]) ? "Try again, username or eMail may already be taken." : nil,
@@ -91,7 +90,7 @@ final class UserController: RouteCollection {
     
     func postRegistrate(req: Request) throws -> EventLoopFuture<Response> {
         //TODO test mit csrf
-        //try req.csrf.verifyToken()
+        try req.csrf.verifyToken()
         let userform = try req.content.decode(User.DTO.self)
         let user = User(firstname: userform.firstname.validate(),
                         lastname: userform.lastname.validate(),
