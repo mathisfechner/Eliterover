@@ -9,16 +9,15 @@ import Vapor
 import Leaf
 import Fluent
 import VaporCSRF
-import App
 
 final class UserController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
+        let csrfTokenProtectedRoutes = routes.grouped(CSRFMiddleware())
         routes.get(":username", use: getUser)
         routes.get("profile", use: profile)
         routes.get("registrate", use: getRegistrate)
         routes.post("registrate", use: postRegistrate)
         routes.get("login", use: getLogin)
-        routes.post("login", use: postLogin)
         routes.get("logout", use: logout)
         routes.on(.POST, "adduserinformation", body: .collect(maxSize: 5000000), use: addUserInformation)
         routes.get("edit", use: getEdit)
@@ -26,12 +25,11 @@ final class UserController: RouteCollection {
         routes.post("changePassword", use: postChangePassword)
         routes.get("everybody", use: everybody)
         routes.get("deleteAllUsers", use: deleteAllUsers)
+
+        routes.post("login", use: postLogin)
     }
-    //ich glaube das gehört hierher er kennt aber app hier nicht...
-    //let csrfTokenPotectedRoutes = app.grouped(CSRFMiddleware())
     
     func getUser(req: Request) throws -> EventLoopFuture<View> {
-
         if req.auth.get(User.self) == nil {
             req.session.data["backToPath"] = "/"+req.parameters.get("username")!
             return try! UserController().getLogin(req: req)
@@ -65,8 +63,7 @@ final class UserController: RouteCollection {
     
     
     func getRegistrate(req: Request) throws -> EventLoopFuture<View> {
-        let csrfToken = req.csrf.storeToken()
-        let input = mainViewData(/*Token: csrfToken,*/ title: "Registration", content: [
+        let input = mainViewData( title: "Registration", content: [
             .init(id: "registration", title: "Registration", forms: [
                 .init(send: "registrate",
                       errorMessage: Elite.date.stillActiveError(req.session.data["registrationError"]) ? "Try again, username or eMail may already be taken." : nil,
@@ -90,8 +87,6 @@ final class UserController: RouteCollection {
     
     
     func postRegistrate(req: Request) throws -> EventLoopFuture<Response> {
-        //TODO test mit csrf
-        try req.csrf.verifyToken()
         let userform = try req.content.decode(User.DTO.self)
         let user = User(firstname: userform.firstname.validate(),
                         lastname: userform.lastname.validate(),
@@ -129,8 +124,8 @@ final class UserController: RouteCollection {
             .init(id: "Login", title: "Login", forms: [
                 .init(
                     send: "login",
-                    errorMessage: Elite.date.stillActiveError(req.session.data["loginFail"]) ? "Invalid username or password, please try again" : nil,
-                    input: [
+                 errorMessage: Elite.date.stillActiveError(req.session.data["loginFail"]) ? "Invalid username or password, please try again" : nil,
+                  input: [
                         .init(identifier: "username", placeholder: "Enter Username", type: "text", restrictions: "autofocus required"),
                         .init(identifier: "password", placeholder: "Enter Password", type: "password", restrictions: "required")
                 ])
@@ -144,6 +139,7 @@ final class UserController: RouteCollection {
     
     
     func postLogin(req: Request) throws -> Response {
+        print(try? req.content.get(String.self, at: req.application.csrf.tokenContentKey))
         let user = (try? req.auth.require(User.self))
         if user == nil {
             req.session.data["loginFail"] = Elite.date.dateFormatter.string(from: Date())

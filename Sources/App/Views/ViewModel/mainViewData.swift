@@ -9,17 +9,20 @@ import Leaf
 import VaporCSRF
 
 class mainViewData: Encodable {
-    //var Token: csrfToken
     var title: String
     var user: User?
     var aside: String? = nil
     var content: [contentViewData]
+    var csrfToken: String
     
     
     
     init(title: String, content: [contentViewData], for req: Request, forMail: Bool = false) {
         self.title = title
         self.content = content
+        self.csrfToken = req.csrf.storeToken()
+
+        req.session.data["csrfSessionKey"] = csrfToken
         user = req.auth.get(User.self)
         if !forMail {self.content.insert(contentsOf: getNotes(for: req), at: 0)}
     }

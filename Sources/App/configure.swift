@@ -18,9 +18,9 @@ public func configure(_ app: Application) throws {
     app.middleware.use(UserRequestAuthenticator())
 
     //csrf key
-    app.csrf.setTokenContentKey("eliteKeykomplettrandom")
-    //kp ob das hierher gehört es tut aber nichts
-    let csrfTokenPotectedRoutes = app.grouped(CSRFMiddleware())
+    app.csrf.setTokenContentKey("csrfToken")
+
+
     
     // MARK: Database
     app.databases.use(.postgres(hostname: "192.168.2.124", username: "max", password: "max", database: "EliteDB"), as: .psql)
