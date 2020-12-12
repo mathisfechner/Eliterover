@@ -12,41 +12,36 @@ import VaporCSRF
 
 final class UserController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
-        let csrfTokenProtectedRoutes = routes.grouped(CSRFMiddleware())
-        routes.get(":username", use: getUser)
-        routes.get("profile", use: profile)
+        let authProtectedRoutes = routes.grouped(AuthMiddlware())
+        authProtectedRoutes.get(":username", use: getUser)
+        authProtectedRoutes.get("profile", use: profile)
         routes.get("registrate", use: getRegistrate)
         routes.post("registrate", use: postRegistrate)
         routes.get("login", use: getLogin)
-        csrfTokenProtectedRoutes.post("login", use: postLogin)
+        routes.post("login", use: postLogin)
         routes.get("logout", use: logout)
-        routes.on(.POST, "adduserinformation", body: .collect(maxSize: 5000000), use: addUserInformation)
-        routes.get("edit", use: getEdit)
-        routes.post("editUser", use: postEditUser)
-        routes.post("changePassword", use: postChangePassword)
-        routes.get("everybody", use: everybody)
-        routes.get("deleteAllUsers", use: deleteAllUsers)
+        authProtectedRoutes.on(.POST, "adduserinformation", body: .collect(maxSize: 5000000), use: addUserInformation)
+        authProtectedRoutes.get("edit", use: getEdit)
+        authProtectedRoutes.post("editUser", use: postEditUser)
+        authProtectedRoutes.post("changePassword", use: postChangePassword)
+        authProtectedRoutes.get("everybody", use: everybody)
+        authProtectedRoutes.get("deleteAllUsers", use: deleteAllUsers)
     }
     
     func getUser(req: Request) throws -> EventLoopFuture<View> {
-        if req.auth.get(User.self) == nil {
-            req.session.data["backToPath"] = "/"+req.parameters.get("username")!
-            return try! UserController().getLogin(req: req)
-        } else {
-            return User.query(on: req.db)
-                .filter(\.$username == (req.parameters.get("username") ?? "Not Found"))
-                .first()
-                .flatMap{
-                    do {
-                        if let user = $0 {
-                            return req.view.render(Elite.view.mainPath, mainViewData(title: user.username, content: [.init(id: user.id!.uuidString, title: user.username, text: [user.firstname+" "+user.lastname, Elite.date.inputFormatter.string(from: user.birthday), user.email,"Auf der Weiblichkeitsskala von 0 bis 1 eine \(user.sex)"])], for: req))
-                        } else {
-                            throw Abort(.notFound)
-                        }
-                    } catch {
-                        return ErrorController().notFound(req: req)
+        return User.query(on: req.db)
+            .filter(\.$username == (req.parameters.get("username") ?? "Not Found"))
+            .first()
+            .flatMap{
+                do {
+                    if let user = $0 {
+                        return req.view.render(Elite.view.mainPath, mainViewData(title: user.username, content: [.init(id: user.id!.uuidString, title: user.username, text: [user.firstname+" "+user.lastname, Elite.date.inputFormatter.string(from: user.birthday), user.email,"Auf der Weiblichkeitsskala von 0 bis 1 eine \(user.sex)"])], for: req))
+                    } else {
+                        throw Abort(.notFound)
                     }
-            }
+                } catch {
+                    return ErrorController().notFound(req: req)
+                }
         }
     }
     
@@ -170,9 +165,6 @@ final class UserController: RouteCollection {
     func addUserInformation(req: Request) throws -> EventLoopFuture<Response> {
         let image = try req.content.decode(ImageDTO.self)
         let user = req.auth.get(User.self)
-        if(user == nil){
-            return req.eventLoop.makeSucceededFuture(req.redirect(to: "/"))
-        }
         if let filetype = image.imageData.contentType?.subType {
             return req.fileio.writeFile(image.imageData.data, at: "profilepicture/\(user!.id!.uuidString).\(filetype)").map() {
                 req.fileio.streamFile(at: "profilepicture/\(user!.id!.uuidString).\(filetype)")
@@ -226,31 +218,27 @@ final class UserController: RouteCollection {
 */
     
     func getEdit(req: Request) throws -> EventLoopFuture<View> {
-        if let user = req.auth.get(User.self) {
-            let input = mainViewData(title: "Edit Userdata", content: [
-                .init(id: "EditUser", title: "Edit Userdata", text: ["Just type in the data you wanna change, don't touch the other fields and click editUser."], forms: [
-                    .init(send: "editUser",input: [
-                        .init(description: "First Name", identifier: "firstname", placeholder: user.firstname, type: "text"),
-                        .init(description: "Last Name", identifier: "lastname", placeholder: user.lastname, type: "text"),
-                        .init(description: "Sex | M - W", identifier: "sex", placeholder: "", type: "range", restrictions: "min=\"0\" max=\"1\" step=\"0.01\" value=\"\(user.sex)\""),
-                        .init(description: "Username", identifier: "username", placeholder: user.username, type: "text"),
-                        .init(description: "eMail", identifier: "email", placeholder: user.email.lowercased(), type: "email"),
-                        .init(description: "Date of birth", identifier: "birthday", placeholder: Elite.date.inputFormatter.string(from: user.birthday), type: "date", restrictions: "pattern=\"[0-3][0-9].[0-1][0-9].[0-9]{4}\"")
-                    ])
-                ]),
-                .init(id: "ChangePassword", title: "Change Password", forms: [
-                    .init(send: "changePassword", errorMessage: Elite.date.stillActiveError(req.session.data["changePasswordError"]) ? "Failure, please try again." : nil, input: [
-                        .init(description: "Old password", identifier: "oldPassword", placeholder: "Enter old password", type: "password"),
-                        .init(description: "New password", identifier: "password", placeholder: "Enter new password", type: "password"),
-                        .init(description: "Retype password", identifier: "repassword", placeholder: "Retype new password", type: "password")
-                    ])
+        let user = try req.auth.require(User.self)
+        let input = mainViewData(title: "Edit Userdata", content: [
+            .init(id: "EditUser", title: "Edit Userdata", text: ["Just type in the data you wanna change, don't touch the other fields and click editUser."], forms: [
+                .init(send: "editUser",input: [
+                    .init(description: "First Name", identifier: "firstname", placeholder: user.firstname, type: "text"),
+                    .init(description: "Last Name", identifier: "lastname", placeholder: user.lastname, type: "text"),
+                    .init(description: "Sex | M - W", identifier: "sex", placeholder: "", type: "range", restrictions: "min=\"0\" max=\"1\" step=\"0.01\" value=\"\(user.sex)\""),
+                    .init(description: "Username", identifier: "username", placeholder: user.username, type: "text"),
+                    .init(description: "eMail", identifier: "email", placeholder: user.email.lowercased(), type: "email"),
+                    .init(description: "Date of birth", identifier: "birthday", placeholder: Elite.date.inputFormatter.string(from: user.birthday), type: "date", restrictions: "pattern=\"[0-3][0-9].[0-1][0-9].[0-9]{4}\"")
                 ])
-            ], for: req)
-            return req.view.render(Elite.view.mainPath, input)
-        } else {
-            req.session.data["backToPath"] = "edit"
-            return try getLogin(req: req)
-        }
+            ]),
+            .init(id: "ChangePassword", title: "Change Password", forms: [
+                .init(send: "changePassword", errorMessage: Elite.date.stillActiveError(req.session.data["changePasswordError"]) ? "Failure, please try again." : nil, input: [
+                    .init(description: "Old password", identifier: "oldPassword", placeholder: "Enter old password", type: "password"),
+                    .init(description: "New password", identifier: "password", placeholder: "Enter new password", type: "password"),
+                    .init(description: "Retype password", identifier: "repassword", placeholder: "Retype new password", type: "password")
+                ])
+            ])
+        ], for: req)
+        return req.view.render(Elite.view.mainPath, input)
     }
     
     
@@ -312,17 +300,12 @@ final class UserController: RouteCollection {
     
     
     func everybody(req: Request) throws -> EventLoopFuture<View> {
-        if req.auth.get(User.self) != nil {
-            let viewData = mainViewData(title: "Everybody", content: [], for: req)
-            return User.query(on: req.db).all().flatMap {
-                for user in $0 {
-                    viewData.content.append(.init(id: user.id!.uuidString, title: user.username, text: [user.firstname+" "+user.lastname, user.email], links: [.init(href: "/"+user.username, description: "View more", classID: "normal")]))
-                }
-                return  req.view.render(Elite.view.mainPath, viewData)
+        let viewData = mainViewData(title: "Everybody", content: [], for: req)
+        return User.query(on: req.db).all().flatMap {
+            for user in $0 {
+                viewData.content.append(.init(id: user.id!.uuidString, title: user.username, text: [user.firstname+" "+user.lastname, user.email], links: [.init(href: "/"+user.username, description: "View more", classID: "normal")]))
             }
-        } else {
-            req.session.data["backToPath"] = "everybody"
-            return try getLogin(req: req)
+            return  req.view.render(Elite.view.mainPath, viewData)
         }
     }
     

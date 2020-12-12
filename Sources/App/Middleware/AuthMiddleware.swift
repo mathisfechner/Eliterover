@@ -9,9 +9,10 @@ import Vapor
 
 class AuthMiddlware: Middleware {
     func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        guard let user = try? request.auth.require(User.self) else {
-            return request.eventLoop.makeSucceededFuture(request.redirect(to: "/"))
+        guard (try? request.auth.require(User.self)) != nil else {
+            request.session.data["backToPath"] = request.url.description
+            return request.eventLoop.makeSucceededFuture(request.redirect(to: "/login"))
         }
-        return request.eventLoop.makeSucceededFuture(Response())
+        return next.respond(to: request)
     }
 }
