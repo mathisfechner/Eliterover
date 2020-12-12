@@ -18,6 +18,7 @@ final class UserController: RouteCollection {
         routes.get("registrate", use: getRegistrate)
         routes.post("registrate", use: postRegistrate)
         routes.get("login", use: getLogin)
+        csrfTokenProtectedRoutes.post("login", use: postLogin)
         routes.get("logout", use: logout)
         routes.on(.POST, "adduserinformation", body: .collect(maxSize: 5000000), use: addUserInformation)
         routes.get("edit", use: getEdit)
@@ -25,8 +26,6 @@ final class UserController: RouteCollection {
         routes.post("changePassword", use: postChangePassword)
         routes.get("everybody", use: everybody)
         routes.get("deleteAllUsers", use: deleteAllUsers)
-
-        routes.post("login", use: postLogin)
     }
     
     func getUser(req: Request) throws -> EventLoopFuture<View> {
@@ -139,7 +138,6 @@ final class UserController: RouteCollection {
     
     
     func postLogin(req: Request) throws -> Response {
-        print(try? req.content.get(String.self, at: req.application.csrf.tokenContentKey))
         let user = (try? req.auth.require(User.self))
         if user == nil {
             req.session.data["loginFail"] = Elite.date.dateFormatter.string(from: Date())
