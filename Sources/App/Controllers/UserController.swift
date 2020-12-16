@@ -80,7 +80,9 @@ final class UserController: RouteCollection {
     
     
     
-    func postRegistrate(req: Request) throws -> EventLoopFuture<Response> {
+    func postRegistrate(req: Request) throws ->
+    EventLoopFuture<Response> {
+        try req.csrf.verifyToken()
         let userform = try req.content.decode(User.DTO.self)
         if (userform.firstname == "" || userform.birthday == "" || userform.email == "" || userform.lastname == "" || userform.password == "" || userform.username == ""  || userform.repassword == "" || userform.sex == ""){
 
@@ -136,6 +138,7 @@ final class UserController: RouteCollection {
     
     
     func postLogin(req: Request) throws -> Response {
+        try req.csrf.verifyToken()
         let user = (try? req.auth.require(User.self))
         if user == nil {
             req.session.data["loginFail"] = Elite.date.dateFormatter.string(from: Date())
@@ -165,7 +168,9 @@ final class UserController: RouteCollection {
     }
 
     
-    func addUserInformation(req: Request) throws -> EventLoopFuture<Response> {
+    func addUserInformation(req: Request) throws ->
+    EventLoopFuture<Response> {
+        try req.csrf.verifyToken()
         let image = try req.content.decode(ImageDTO.self)
         let user = req.auth.get(User.self)
         if let filetype = image.imageData.contentType?.subType {
@@ -247,6 +252,7 @@ final class UserController: RouteCollection {
     
     
     func postEditUser(req: Request) throws -> EventLoopFuture<Response> {
+        try req.csrf.verifyToken()
         if let user = req.auth.get(User.self) {
             let userform = try req.content.decode(User.DTO.self)
             user.firstname = userform.firstname == "" ? user.firstname : userform.firstname.validate()
@@ -287,6 +293,7 @@ final class UserController: RouteCollection {
     
     
     func postChangePassword(req: Request) throws -> EventLoopFuture<Response> {
+        try req.csrf.verifyToken()
         let passwordform = try req.content.decode(User.passwordDTO.self)
         if let user = req.auth.get(User.self), try Bcrypt.verify(passwordform.oldPassword, created: user.passwordHash) && passwordform.password == passwordform.repassword {
             user.passwordHash = try Bcrypt.hash(passwordform.password)

@@ -12,7 +12,6 @@ final class MainController : RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         routes.get("", use: start)
         routes.get("accept", "cookies", use: getCookie)
-        routes.post("accept", "cookies", use: postCookie)
     }
     
     func start(req: Request) throws -> EventLoopFuture<View> {
@@ -27,9 +26,5 @@ final class MainController : RouteCollection {
     func getCookie(req: Request) throws -> Response {
         req.session.data["Cookies"] = "accepted"
         return req.redirect(to: "/")
-    }
-    func postCookie(req: Request) throws -> HTTPResponseStatus {
-        req.session.data["Cookies"] = "accepted"
-        return HTTPResponseStatus.ok
     }
 }

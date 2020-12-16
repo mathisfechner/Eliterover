@@ -1,5 +1,5 @@
 function answer(path, divid) {
-	fetch(path, {method: "post"}).then(function(response) {
+	fetch(path, {method: "get"}).then(function(response) {
         hide(divid)
 	});
 }
