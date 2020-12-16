@@ -16,7 +16,7 @@ public func configure(_ app: Application) throws {
     app.middleware.use(app.sessions.middleware)
     app.middleware.use(UserCredentialsAuthenticator())
     app.middleware.use(UserRequestAuthenticator())
-    app.middleware.use(CSRFMiddleware())
+    //app.middleware.use(CSRFMiddleware())
 
     //csrf key
     //app.csrf.setTokenContentKey("csrfToken")

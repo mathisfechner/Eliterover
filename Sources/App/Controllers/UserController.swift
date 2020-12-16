@@ -62,14 +62,14 @@ final class UserController: RouteCollection {
                 .init(send: "registrate",
                       errorMessage: Elite.date.stillActiveError(req.session.data["registrationError"]) ? "Try again, username or eMail may already be taken." : nil,
                       input: [
-                    .init(description: "First name", identifier: "firstname", placeholder: "Max", type: "text"),
-                    .init(description: "Last name", identifier: "lastname", placeholder: "Mustermann", type: "text"),
-                    .init(description: "Sex | M - W", identifier: "sex", placeholder: "", type: "range", restrictions: "min=\"0\" max=\"1\" step=\"0.01\""),
-                    .init(description: "Username", identifier: "username", placeholder: "Enter Username", type: "text"),
-                    .init(description: "Password", identifier: "password", placeholder: "Enter Password", type: "password"),
-                    .init(description: "Retype password", identifier: "repassword", placeholder: "Retype Password", type: "password"),
-                    .init(description: "eMail", identifier: "email", placeholder: "max.mustermann@elite.rover", type: "email"),
-                    .init(description: "Date of birth", identifier: "birthday", placeholder: "DD.MM.JJJJ", type: "date", restrictions: "pattern=\"[0-3][0-9].[0-1][0-9].[0-9]{4}\"")
+                    .init(description: "First name", identifier: "firstname", placeholder: "Max", type: "text", restrictions: "required"),
+                    .init(description: "Last name", identifier: "lastname", placeholder: "Mustermann", type: "text", restrictions: "required"),
+                    .init(description: "Sex | M - W", identifier: "sex", placeholder: "", type: "range", restrictions: "min=\"0\" max=\"1\" step=\"0.01\" required"),
+                    .init(description: "Username", identifier: "username", placeholder: "Enter Username", type: "text", restrictions: "required"),
+                    .init(description: "Password", identifier: "password", placeholder: "Enter Password", type: "password", restrictions: "required"),
+                    .init(description: "Retype password", identifier: "repassword", placeholder: "Retype Password", type: "password", restrictions: "required"),
+                    .init(description: "eMail", identifier: "email", placeholder: "max.mustermann@elite.rover", type: "email", restrictions: "required"),
+                    .init(description: "Date of birth", identifier: "birthday", placeholder: "DD.MM.YYYY", type: "date", restrictions: "pattern=\"[0-3][0-9].[0-1][0-9].[0-9]{4}\" required")
                 ])
             ], links: [
                 .init(href: "/login", description: "i have an account already", classID: "little")
@@ -82,6 +82,9 @@ final class UserController: RouteCollection {
     
     func postRegistrate(req: Request) throws -> EventLoopFuture<Response> {
         let userform = try req.content.decode(User.DTO.self)
+        if (userform.firstname == "" || userform.birthday == "" || userform.email == "" || userform.lastname == "" || userform.password == "" || userform.username == ""  || userform.repassword == "" || userform.sex == ""){
+
+        }
         let user = User(firstname: userform.firstname.validate(),
                         lastname: userform.lastname.validate(),
                         sex: (userform.sex as NSString).floatValue,

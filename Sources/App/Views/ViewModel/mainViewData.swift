@@ -21,7 +21,7 @@ class mainViewData: Encodable {
         self.title = title
         self.content = content
         self.csrfToken = req.csrf.storeToken()
-
+        print(csrfToken)
         req.session.data["csrfSessionKey"] = csrfToken
         user = req.auth.get(User.self)
         if !forMail {self.content.insert(contentsOf: getNotes(for: req), at: 0)}
