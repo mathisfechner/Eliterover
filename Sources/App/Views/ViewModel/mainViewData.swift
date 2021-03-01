@@ -32,9 +32,6 @@ class mainViewData: Encodable {
     func getNotes(for req: Request) -> [contentViewData] {
          var notes: [contentViewData] = []
         let user = req.auth.get(User.self)
-        if (user != nil){
-            notes.append(UserController.addUserInformationForm(req: req))
-        }
 
         if req.session.data["error/verifyMail"] != nil {
             req.session.data["error/verifyMail"] = nil

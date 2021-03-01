@@ -50,8 +50,8 @@ class defaultDate {
 }
 
 class defaultView {
-    static let mainPath = "Main"
-    static let mainMailPath = "MainMail"
+    static let mainPath = "/Templates/Main"
+    static let mainMailPath = "/Templates/MainMail"
 }
 
 class defaultMail {

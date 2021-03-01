@@ -13,11 +13,10 @@ let package = Package(
         .package(url: "https://github.com/vapor/fluent-postgres-driver.git", from: "2.0.0"),
         // Leaf
         .package(url: "https://github.com/vapor/leaf.git", from: "4.0.0-rc"),
+        //.package(url: "https://github.com/vapor/leaf", .exact("4.0.0-tau.1")),
+        //.package(url: "https://github.com/vapor/leaf-kit", .exact("1.0.0-tau.1.1")),
         // Mail SMTP
         .package(url: "https://github.com/Mikroservices/Smtp.git", from: "2.0.0"),
-        //HTML Kit
-        .package(url: "https://github.com/vapor-community/HTMLKit.git", from: "2.0.0"),
-        .package(name: "HTMLKitVaporProvider", url: "https://github.com/MatsMoll/htmlkit-vapor-provider.git", from: "1.0.0"),
         // 💧 A server-side Swift web framework.
         .package(url: "https://github.com/vapor/vapor.git", from: "4.0.0"),
         //A package to prevent CSRF
@@ -31,8 +30,6 @@ let package = Package(
                 .product(name: "FluentPostgresDriver", package: "fluent-postgres-driver"),
                 .product(name: "Leaf", package: "leaf"),
                 .product(name: "Smtp", package: "Smtp"),
-                .product(name: "HTMLKit", package: "HTMLKit"),
-                .product(name: "HTMLKitVaporProvider", package: "HTMLKitVaporProvider"),
                 .product(name: "Vapor", package: "vapor"),
                 "VaporCSRF"
             ],

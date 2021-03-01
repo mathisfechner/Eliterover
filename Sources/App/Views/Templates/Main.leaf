@@ -1,0 +1,83 @@
+#extend("Templates/Base"):
+#export("main"):
+          #if(aside != nil):
+		  <aside class="content">
+		  </aside>
+          #endif
+		  <div class="main">
+			  #for(view in content):
+			  <div class="#(view.classID)" id="#(view.id)">
+				  <h1>#(view.title)</h1>
+				  
+				  #if(view.text != nil):
+				  #for(paragraph in view.text):
+				  <p>#(paragraph)</p>
+				  #endfor
+				  #endif
+                  
+                  #if(view.profile != nil):
+                  <div style="display: flex; flex-direction: row; margin: 0 0 0.25rem 0">
+                    <div style="min-width: 6rem; width: 6rem; height: 8rem; margin: 0 0.5rem 0 0; overflow: hidden; align-content: center; object-fit: cover;">
+                        <img src="/image/#(view.profile.username)" alt="Profilbild von #(view.profile.username)" style="width: 100%; height: 100%; object-fit: cover">
+                    </div>
+                    <div style="width: 100%; display: flex; flex-flow: column; justify-content: space-between">
+                        <div>
+                            <h1>#(view.profile.firstname)</h1>
+                            <h1>#(view.profile.lastname)</h1>
+                            <p>@#(view.profile.username)</p>
+                        </div>
+                        <div style="background-color: \#EDEDED; border-radius: 1.25rem; margin: 0.25rem 0 0.25rem 0;">
+                            #if(view.profile.sex < 35):
+                            <p style="background-color: #8AE800; width: #(100-view.profile.sex)%; padding: 0; margin:0;border-radius: 1.25rem; text-align: center">männlich</p>
+                            #elseif(view.profile.sex > 65):
+                            <p style="background-color: #8AE800; width: #(view.profile.sex)%; padding: 0; margin:0;border-radius: 1.25rem; text-align: center">weiblich</p>
+                            #else:
+                            <p style="background-color: #8AE800; width: #(view.profile.sex)%; padding: 0; margin:0;border-radius: 1.25rem; text-align: center">neutral</p>
+                            #endif
+
+                        </div>
+                    </div>
+                  </div>
+                  #endif
+                  
+				  #if(view.forms != nil):
+				  #for(form in view.forms):
+				  #if(form.errorMessage != nil):
+				  <p class="error">#(form.errorMessage)</p>
+				  #endif
+				  
+				  <form action="#(form.send)" method="post" enctype="multipart/form-data" id="#(form.send)">
+					  #for(field in form.input):
+					  <div class="fieldRow">
+						  #if(field.description != nil):
+						  <label for="#(field.identifier)">#(field.description)</label>
+						  #endif
+						  <input form="#(form.send)" class="#(field.classID)" name="#(field.identifier)" placeholder="#(field.placeholder)" type="#(field.type)" #(field.restrictions)>
+					  </div>
+					  #endfor
+					  <input form="#(form.send)" type="hidden" name="csrfToken" value="#(csrfToken)">
+					  <button type="submit">#(form.send)</button>
+				  </form>
+				  #endfor
+				  #endif
+				  
+				  #if(view.buttons != nil):
+				  <div class="fieldRow">
+					  #for(button in view.buttons):
+					  <button id="#(button.id)", onclick="#(button.onclick)">#(button.description)</button>
+					  #endfor
+				  </div>
+				  #endif
+				  
+				  #if(view.links != nil):
+				  <div class="fieldRow">
+					  #for(link in view.links):
+					  <a href="#(link.href)" class="#(link.classID)">#(link.description)</a>
+					  #endfor
+				  </div>
+				  #endif
+			  </div>
+			  #endfor
+		  </div>
+#endexport
+#endextend

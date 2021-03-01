@@ -15,12 +15,14 @@ final class UserController: RouteCollection {
         let authProtectedRoutes = routes.grouped(AuthMiddlware())
         authProtectedRoutes.get(":username", use: getUser)
         authProtectedRoutes.get("profile", use: profile)
+        authProtectedRoutes.get("image", ":username", use: getProfilPic)
         routes.get("registrate", use: getRegistrate)
         routes.post("registrate", use: postRegistrate)
         routes.get("login", use: getLogin)
         routes.post("login", use: postLogin)
         routes.get("logout", use: logout)
         authProtectedRoutes.on(.POST, "adduserinformation", body: .collect(maxSize: 5000000), use: addUserInformation)
+        authProtectedRoutes.on(.POST, "characteristics", body: .collect(maxSize: "10mb"), use: postCharacteristics)
         authProtectedRoutes.get("edit", use: getEdit)
         authProtectedRoutes.post("editUser", use: postEditUser)
         authProtectedRoutes.post("changePassword", use: postChangePassword)
@@ -49,9 +51,11 @@ final class UserController: RouteCollection {
     
     func profile(req: Request) throws -> EventLoopFuture<View> {
         let user = try req.auth.require(User.self)
-        return req.view.render(Elite.view.mainPath, mainViewData(title: "Eliterover", content: [
-            .init(id: user.username, title: "Profile", text: ["You are logged in as: "+user.username, "Nice to see you again!"], links: [.init(href: "/edit", description: "Edit Userdata", classID: "normal")]),
-        ], for: req))
+        let data = mainViewData(title: "Eliterover", content: [
+            .init(id: user.username, title: "Profil", text: ["Du bist angemeldet als: "+user.username, "Schön, dich wiederzusehen!"], links: [.init(href: "/edit", description: "Daten bearbeiten", classID: "normal")]),
+        ], for: req)
+        if(user.characteristics == nil) {data.content.append(try characteristicsForm(req: req))}
+        return req.view.render(Elite.view.mainPath, data)
     }
     
     
@@ -85,7 +89,6 @@ final class UserController: RouteCollection {
         try req.csrf.verifyToken()
         let userform = try req.content.decode(User.DTO.self)
         if (userform.firstname == "" || userform.birthday == "" || userform.email == "" || userform.lastname == "" || userform.password == "" || userform.username == ""  || userform.repassword == "" || userform.sex == ""){
-
         }
         let user = User(firstname: userform.firstname.validate(),
                         lastname: userform.lastname.validate(),
@@ -105,7 +108,7 @@ final class UserController: RouteCollection {
                         
                         req.session.data["id"] = user.id?.uuidString
                         let backToPath = req.session.data["backToPath"] ?? "/"
-                        req.session.data["bakToPath"] = nil
+                        req.session.data["backToPath"] = nil
                         req.session.data["registrationError"] = nil
                         
                         return req.redirect(to: backToPath)
@@ -168,8 +171,11 @@ final class UserController: RouteCollection {
     }
 
     
-    func addUserInformation(req: Request) throws ->
-    EventLoopFuture<Response> {
+    func addUserInformation(req: Request) throws -> EventLoopFuture<Response> {
+        struct ImageDTO: Content {
+            var imageData: File
+        }
+        
         try req.csrf.verifyToken()
         let image = try req.content.decode(ImageDTO.self)
         let user = req.auth.get(User.self)
@@ -179,12 +185,79 @@ final class UserController: RouteCollection {
             }
         }
         return req.eventLoop.makeSucceededFuture(req.redirect(to: "/"))
-
-        struct ImageDTO: Content {
-            var imageData: File
+    }
+    
+    func characteristicsForm(req: Request) throws -> contentViewData {
+        contentViewData(id: "Characteristics", title: "Characteristics", text: ["Wir wissen gar nichts über dich.", "Beschreib dich bitte mal kurz."], forms: [
+            .init(send: "characteristics", input: [
+                .init(identifier: "imageData", placeholder: "Profilbild", type: "file", restrictions: "required"),
+                .init(description: "Beschreibung", identifier: "description", placeholder: "Erzähl mal was über dich", type: "text"),
+                .init(description: "Größe", identifier: "height", placeholder: "180", type: "number", restrictions: "required min='135' max='235'"),
+                .init(description: "Region", identifier: "region", placeholder: "Nord", type: "text", restrictions: "required"),
+                .init(description: "Lebenssituation", identifier: "lifeSituation", placeholder: "Was machst du so?", type: "text", restrictions: "required"),
+                .init(description: "Amt im Stamm", identifier: "positions", placeholder: "Stammesführer", type: "text"),
+                .init(description: "Dialekt", identifier: "dialect", placeholder: "Sächsisch", type: "text"),
+                .init(description: "Hajk Enthusiasmus", identifier: "hajkEnthusiasm", placeholder: "50", type: "range", restrictions: "min=\"0\" max=\"1\" step=\"0.01\" required"),
+                .init(description: "Sarkasmus", identifier: "sarcasm", placeholder: "50", type: "range", restrictions: "min=\"0\" max=\"1\" step=\"0.01\" required"),
+                .init(description: "Level Christ", identifier: "christianLevel", placeholder: "50", type: "range", restrictions: "min=\"0\" max=\"1\" step=\"0.01\" required"),
+                .init(description: "Musikalität", identifier: "musicality", placeholder: "50", type: "range", restrictions: "min=\"0\" max=\"1\" step=\"0.01\" required"),
+                .init(description: "Kochskills", identifier: "cookingSkills", placeholder: "50", type: "range", restrictions: "min=\"0\" max=\"1\" step=\"0.01\" required")
+            ])
+        ])
+    }
+    
+    func postCharacteristics(req: Request) throws -> EventLoopFuture<Response> {
+        _ = try? postProfileImage(req: req)
+        let characteristics = try req.content.decode(Characteristics.self)
+        let user = try req.auth.require(User.self)
+        user.characteristics = characteristics
+        return user.update(on: req.db).map() {
+            req.redirect(to: "/")
         }
     }
     
+    func postProfileImage(req: Request) throws -> EventLoopFuture<Response> {
+        let image = ProfilePic(DTO: try req.content.decode(ProfilePic.DTO.self), user: try req.auth.require(User.self))
+        if let profilePic = image {
+            return profilePic.$user.get(on: req.db).flatMap() {
+                return $0.$profilePic.get(on: req.db).flatMap() {
+                    if let previous = $0.first {
+                        return previous.delete(on: req.db).flatMap() {
+                            profilePic.create(on: req.db).map() {
+                                req.redirect(to: "/")
+                            }
+                        }
+                    } else {
+                        return profilePic.create(on: req.db).map() {
+                            req.redirect(to: "/")
+                        }
+                    }
+                }
+            }
+        }
+        return req.eventLoop.makeSucceededFuture(req.redirect(to: "/"))
+    }
+    
+    func getProfilPic(req: Request) throws -> EventLoopFuture<Response> {
+        print("am i getting here?")
+        return User.query(on: req.db)
+            .filter(\.$username == (req.parameters.get("username") ?? "Not Found"))
+            .first()
+            .flatMap() {
+                $0?.$profilePic.get(on: req.db).map() {
+                    if let image = $0.first {
+                        let response = Response(status: .ok, headers: [:])
+                        if let type = HTTPMediaType.fileExtension(image.imageType) {
+                            response.headers.contentType = type
+                        }
+                        response.body = .init(data: image.imageData)
+                        return response
+                    } else {
+                        return (req.fileio.streamFile(at: "Public/eliteProfilbild.png"))
+                    }
+                } ?? req.eventLoop.makeSucceededFuture(req.fileio.streamFile(at: "Public/eliteProfilbild.png"))
+            }
+    }
 /*
     func streamPng(req: Request) throws -> Response {
         var count = 0
@@ -313,7 +386,7 @@ final class UserController: RouteCollection {
         let viewData = mainViewData(title: "Everybody", content: [], for: req)
         return User.query(on: req.db).all().flatMap {
             for user in $0 {
-                viewData.content.append(.init(id: user.id!.uuidString, title: user.username, text: [user.firstname+" "+user.lastname, user.email], links: [.init(href: "/"+user.username, description: "View more", classID: "normal")]))
+                viewData.content.append(.init(id: user.id!.uuidString, profile: .init(firstname: user.firstname, lastname: user.lastname, username: user.username, sex: Int(user.sex*100)), links: [.init(href: "/"+user.username, description: "View more", classID: "normal")]))
             }
             return  req.view.render(Elite.view.mainPath, viewData)
         }

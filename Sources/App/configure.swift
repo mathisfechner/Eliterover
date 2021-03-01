@@ -25,12 +25,17 @@ public func configure(_ app: Application) throws {
     // MARK: Database
     app.databases.use(.postgres(hostname: "192.168.2.124", username: "max", password: "max", database: "EliteDB"), as: .psql)
     // MARK: Leaf
+    /*LeafEngine.rootDirectory = "Sources/App/Views"
+    LeafSources.defaultExtension = "htm"
+    if !app.environment.isRelease {
+        LeafRenderer.Option.caching = .bypass
+    }*/
     app.views.use(.leaf)
     app.leaf.cache.isEnabled = app.environment.isRelease
     app.leaf.configuration.rootDirectory = "Sources/App/Views"
     
     // MARK: Migrations
     app.migrations.add(User.migrations)
-    app.migrations.add(UserInformation.migrations)
+    app.migrations.add(ProfilePic.migrations)
     try app.autoMigrate().wait()
 }

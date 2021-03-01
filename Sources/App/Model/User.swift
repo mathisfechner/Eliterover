@@ -21,9 +21,11 @@ class User: Model, Authenticatable {
     @Field(key: .passwordHash) var passwordHash: String
     @Field(key: .email) var email: String
     @Field(key: .birthday) var birthday: Date
+    @Timestamp(key: .dateOfJoin, on: .create) var dateOfJoin: Date?
+    @OptionalField(key: .characteristics) var characteristics: Characteristics?
     
-    @Children(for: \.$user) var userInformation: [UserInformation]
-    
+    @Children(for: \.$user) var profilePic: [ProfilePic]
+
     required init() { }
     
     init(id: UUID? = nil, firstname: String, lastname: String, sex: Float, username: String, passwordHash: String, email: String, birthday: Date) {
@@ -64,7 +66,7 @@ extension User {
 //MARK: Migrations
 
 extension User {
-    static let migrations = [migration_v1_0_0()]
+    static let migrations: [Migration] = [migration_v1_0_0(), migration_v1_0_1()]
     
     struct migration_v1_0_0: Migration {
         // Prepares the database for storing User models.
@@ -87,6 +89,19 @@ extension User {
              database.schema(User.schema).delete()
          }
     }
+    
+    struct migration_v1_0_1: Migration {
+        func prepare(on database: Database) -> EventLoopFuture<Void> {
+            database.schema(User.schema)
+                .field(.dateOfJoin, .date)
+                .field(.characteristics, .dictionary)
+                .update()
+        }
+        
+        func revert(on database: Database) -> EventLoopFuture<Void> {
+            database.schema(User.schema).delete()
+        }
+    }
 }
 
 
@@ -100,4 +115,7 @@ extension FieldKey {
     static var passwordHash: Self {"passwordHash"}
     static var email: Self {"email"}
     static var birthday: Self {"birthday"}
+    static var dateOfJoin: Self {"dateOfJoin"}
+    static var characteristics: Self {"characteristics"}
+    static var kindOfInto: Self {"kindOfInto"}
 }
