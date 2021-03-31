@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Vapor
 
 class Elite {
     static let routing = defaultRouting.self

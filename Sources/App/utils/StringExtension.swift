@@ -14,5 +14,6 @@ extension String {
             .replacingOccurrences(of: ">", with: "&gt")
             .replacingOccurrences(of: "\"", with: "&quot")
             .replacingOccurrences(of: "'", with: "&#039")
+            .replacingOccurrences(of: "\n", with: "<br>")
     }
 }

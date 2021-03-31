@@ -1,0 +1,70 @@
+#define(profile):
+<div style="display: flex; flex-direction: row;">
+  <div style="min-width: 6rem; width: 6rem; height: 8rem; margin: 0 0.5rem 0 0; overflow: hidden; align-content: center; object-fit: cover;">
+      <img src="/image/\#(username)" alt="Profilbild von \#(username)" style="width: 100%; height: 100%; object-fit: cover">
+  </div>
+  <div style="width: 100%; display: flex; flex-flow: column; justify-content: space-between">
+      <div>
+          <h1>\#(firstname)</h1>
+          <h1>\#(lastname)</h1>
+          <p>@\#(username)</p>
+      </div>
+      <div style="background-color: #EDEDED; border-radius: 1.25rem; margin: 0.25rem 0 0.25rem 0;">
+          <p style="background-color: #8AE800; width: 50%; padding: 0rem 0.5rem 0rem 0.5rem; margin:0;border-radius: 1.25rem; text-align: center">female</p>
+      </div>
+  </div>
+</div>
+#enddefine
+
+
+
+#define(text):
+#for(paragraph in view.text):
+<p>#(paragraph)</p>
+#endfor
+#enddefine
+
+
+
+#define(form):
+#for(form in view.forms):
+#if(form.errorMessage != nil):
+<p class="error">#(form.errorMessage)</p>
+#endif
+
+
+
+<form action="#(form.send)" method="post" enctype="multipart/form-data" id="#(form.send)">
+  #for(field in form.input):
+  <div class="fieldRow">
+      #if(field.description != nil):
+      <label for="#(field.identifier)">#(field.description)</label>
+      #endif
+      <input form="#(form.send)" class="#(field.classID)" name="#(field.identifier)" placeholder="#(field.placeholder)" type="#(field.type)" #(field.restrictions)>
+  </div>
+  #endfor
+  <input form="#(form.send)" type="hidden" name="csrfToken" value="#(csrfToken)">
+  <button type="submit">#(form.send)</button>
+</form>
+#endfor
+#enddefine
+
+
+
+#define(buttons):
+<div class="fieldRow">
+  #for(button in view.buttons):
+  <button id="#(button.id)", onclick="#(button.onclick)">#(button.description)</button>
+  #endfor
+</div>
+#enddefine
+
+
+
+#define(links):
+<div class="fieldRow">
+  #for(link in view.links):
+  <a href="#(link.href)" class="#(link.classID)">#(link.description)</a>
+  #endfor
+</div>
+#enddefine

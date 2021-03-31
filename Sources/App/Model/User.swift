@@ -25,6 +25,7 @@ class User: Model, Authenticatable {
     @OptionalField(key: .characteristics) var characteristics: Characteristics?
     
     @Children(for: \.$user) var profilePic: [ProfilePic]
+    @Children(for: \.$user) var chats: [Chat]
 
     required init() { }
     
@@ -37,6 +38,19 @@ class User: Model, Authenticatable {
         self.passwordHash = passwordHash
         self.email = email
         self.birthday = birthday
+    }
+    
+    static func getUser(username: String, req: Request) -> EventLoopFuture<User> {
+        return User.query(on: req.db)
+            .filter(\.$username == username)
+            .first()
+            .flatMapThrowing {
+                if let user = $0 {
+                    return user
+                } else {
+                    throw Abort(.notFound)
+                }
+            }
     }
 }
 

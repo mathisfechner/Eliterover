@@ -42,6 +42,6 @@
 		  <a class="little">Datenschutzerklärung</a>
 		  <a class="little">Impressum</a>
 	  </footer>
-	  <script src="js/script.js"></script>
+	  <script src="http://localhost:8080/js/script.js"></script>
 	</body>
 </html>

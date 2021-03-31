@@ -31,19 +31,13 @@ final class UserController: RouteCollection {
     }
     
     func getUser(req: Request) throws -> EventLoopFuture<View> {
-        return User.query(on: req.db)
-            .filter(\.$username == (req.parameters.get("username") ?? "Not Found"))
-            .first()
-            .flatMap{
-                do {
-                    if let user = $0 {
-                        return req.view.render(Elite.view.mainPath, mainViewData(title: user.username, content: [.init(id: user.id!.uuidString, title: user.username, text: [user.firstname+" "+user.lastname, Elite.date.inputFormatter.string(from: user.birthday), user.email,"Auf der Weiblichkeitsskala von 0 bis 1 eine \(user.sex)"])], for: req))
-                    } else {
-                        throw Abort(.notFound)
-                    }
-                } catch {
-                    return ErrorController().notFound(req: req)
+        if let username = req.parameters.get("username") {
+            return User.getUser(username: username, req: req)
+                .flatMap{
+                    return req.view.render(Elite.view.mainPath, mainViewData(title: $0.username, content: [.init(id: $0.id!.uuidString, title: $0.username, text: [$0.firstname+" "+$0.lastname, Elite.date.inputFormatter.string(from: $0.birthday), $0.email,"Auf der Weiblichkeitsskala von 0 bis 1 eine \($0.sex)"])], for: req))
                 }
+        } else {
+            throw Abort(.badRequest)
         }
     }
     
@@ -239,7 +233,6 @@ final class UserController: RouteCollection {
     }
     
     func getProfilPic(req: Request) throws -> EventLoopFuture<Response> {
-        print("am i getting here?")
         return User.query(on: req.db)
             .filter(\.$username == (req.parameters.get("username") ?? "Not Found"))
             .first()

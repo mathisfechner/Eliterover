@@ -37,5 +37,7 @@ public func configure(_ app: Application) throws {
     // MARK: Migrations
     app.migrations.add(User.migrations)
     app.migrations.add(ProfilePic.migrations)
+    app.migrations.add(Chat.migrations)
+    app.migrations.add(Message.migrations)
     try app.autoMigrate().wait()
 }
